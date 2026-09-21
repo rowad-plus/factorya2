@@ -12,6 +12,7 @@ import '../services/auth_service.dart';
 import '../services/l10n.dart';
 import '../theme/app_theme.dart';
 import 'common_widgets.dart';
+import 'country_flag.dart';
 import 'country_picker.dart';
 import 'net_image.dart';
 
@@ -88,7 +89,7 @@ class _CountryButton extends StatelessWidget {
       listenable: AppData.revision,
       builder: (context, _) => GestureDetector(
         onTap: () => CountryPicker.show(context),
-        child: _Flag('${AppData.country?['code'] ?? ''}'),
+        child: CountryFlag('${AppData.country?['code'] ?? ''}', width: 38),
       ),
     );
   }
@@ -252,32 +253,6 @@ class _UserButton extends StatelessWidget {
                       fontWeight: FontWeight.w800, color: AppColors.dark))),
         );
       },
-    );
-  }
-}
-
-/// Country flag from flagcdn (emoji flags render as tofu on some platforms); falls back to the code.
-class _Flag extends StatelessWidget {
-  final String code;
-  const _Flag(this.code);
-
-  @override
-  Widget build(BuildContext context) {
-    final c = code.toLowerCase();
-    final fallback = Text(code.isEmpty ? '--' : code,
-        style: GoogleFonts.tajawal(
-            fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white));
-    if (c.length != 2) return fallback;
-    return Container(
-      width: 30,
-      height: 30,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.gold, width: 1.5)),
-      child: Image.network('https://flagcdn.com/w80/$c.png',
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Center(child: fallback)),
     );
   }
 }

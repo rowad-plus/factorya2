@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/app_data.dart';
 import '../screens/opportunities/opportunities_screen.dart' show tri;
 import '../theme/app_theme.dart';
+import 'country_flag.dart';
 
 /// First-launch popup: the visitor must pick the country to browse. Only countries the admin
 /// activated (`/countries`, `is_active`) are listed. The choice is saved and can be changed later
@@ -115,14 +116,9 @@ class _CountryDialogState extends State<_CountryDialog> {
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                             decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
                             child: Row(children: [
-                              Container(
-                                width: 42, height: 42,
-                                alignment: Alignment.center,
-                                decoration: const BoxDecoration(color: AppColors.gold3, shape: BoxShape.circle),
-                                child: Text('${c['code'] ?? '?'}', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.dark)),
-                              ),
+                              CountryFlag('${c['code'] ?? ''}', width: 48),
                               const SizedBox(width: 12),
-                              Expanded(child: Text(AppData.tr(c, 'name'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text))),
+                              Expanded(child: Row(children: [Flexible(child: Text(AppData.tr(c, 'name'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text))), const SizedBox(width: 8), CountryCodeBox('${c['code'] ?? ''}')])),
                               Icon(Icons.chevron_left, color: AppColors.muted.withAlpha(150)),
                             ]),
                           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/app_data.dart';
 import '../theme/app_theme.dart';
+import 'country_flag.dart';
 
 /// Bottom sheet to switch the market (country) the whole app browses.
 class CountryPicker {
@@ -22,8 +23,12 @@ class CountryPicker {
             ),
             for (final c in AppData.countries)
               ListTile(
-                title: Text(AppData.tr(c, 'name'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w600)),
-                subtitle: Text('${c['code'] ?? ''}', style: GoogleFonts.tajawal(fontSize: 11, color: AppColors.muted)),
+                leading: CountryFlag('${c['code'] ?? ''}', width: 40),
+                title: Row(children: [
+                  Flexible(child: Text(AppData.tr(c, 'name'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w600))),
+                  const SizedBox(width: 8),
+                  CountryCodeBox('${c['code'] ?? ''}'),
+                ]),
                 trailing: c['id'] == AppData.countryId ? const Icon(Icons.check_circle, color: AppColors.gold) : null,
                 onTap: () {
                   Navigator.pop(sheetContext);
