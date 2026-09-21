@@ -21,7 +21,8 @@ class CountryPicker {
               padding: const EdgeInsets.all(14),
               child: Text('اختر الدولة', style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.text)),
             ),
-            for (final c in AppData.countries)
+            // The country the user is browsing from comes first, the others follow.
+            for (final c in [...AppData.countries]..sort((a, b) => (b['id'] == AppData.countryId ? 1 : 0) - (a['id'] == AppData.countryId ? 1 : 0)))
               ListTile(
                 leading: CountryFlag('${c['code'] ?? ''}', width: 40),
                 title: Row(children: [
