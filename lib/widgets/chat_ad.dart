@@ -91,8 +91,7 @@ class _ChatAdState extends State<ChatAd> {
         if (uri != null && await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
       },
       child: Container(
-        margin: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
         clipBehavior: Clip.antiAlias,
         child: AspectRatio(
           aspectRatio: 4,

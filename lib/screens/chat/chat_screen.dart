@@ -690,27 +690,28 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       backgroundColor: const Color(0xFFF0EFEA),
       body: Column(
         children: [
+          // Slim, light-grey name bar (the app header above already covers the status-bar area).
           Container(
-            color: AppColors.dark,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 8, 14, 8),
-                child: Row(children: [
-                  IconButton(onPressed: () => Navigator.pop(context), icon: Icon(rtl ? Icons.arrow_forward : Icons.arrow_back, color: Colors.white)),
-                  Container(
-                    width: 40, height: 40,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle, border: Border.all(color: Colors.white.withAlpha(76))),
-                    child: (widget.logo != null && widget.logo!.isNotEmpty)
-                        ? NetImage(url: widget.logo, brandFallback: true, fallbackSize: 10, width: 40, height: 40)
-                        : Center(child: Text(widget.avatar.isNotEmpty ? String.fromCharCode(widget.avatar.runes.first) : '?', style: GoogleFonts.tajawal(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15))),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white))),
-                ]),
+            height: 44,
+            decoration: const BoxDecoration(color: Color(0xFFF3F4F6), border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB)))),
+            padding: const EdgeInsetsDirectional.only(end: 12),
+            child: Row(children: [
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(rtl ? Icons.arrow_forward : Icons.arrow_back, color: const Color(0xFF6B7280), size: 20),
               ),
-            ),
+              Container(
+                width: 26, height: 26,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(color: const Color(0xFFE5E7EB), shape: BoxShape.circle),
+                child: (widget.logo != null && widget.logo!.isNotEmpty)
+                    ? NetImage(url: widget.logo, brandFallback: true, fallbackSize: 6, width: 26, height: 26)
+                    : Center(child: Text(widget.avatar.isNotEmpty ? String.fromCharCode(widget.avatar.runes.first) : '?', style: GoogleFonts.tajawal(color: const Color(0xFF6B7280), fontWeight: FontWeight.w800, fontSize: 12))),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
+            ]),
           ),
           if (_asOwner) const ChatAd(forFactory: true) else if (!_factoryAccount) ChatAd(factoryId: widget.factoryId),
           Expanded(
@@ -749,7 +750,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
           Container(
             color: Colors.white,
-            child: _factoryAccount ? const SizedBox.shrink() : SafeArea(top: false, child: Padding(padding: const EdgeInsets.fromLTRB(6, 8, 10, 8), child: _composer())),
+            child: _factoryAccount ? const SizedBox.shrink() : Padding(padding: const EdgeInsets.fromLTRB(6, 8, 10, 8), child: _composer()),
           ),
         ],
       ),
