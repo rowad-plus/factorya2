@@ -246,20 +246,10 @@ class _MyFactorySectionState extends State<MyFactorySection> {
 
   List<String> _ids(String key) => _f?[key] is List ? (_f![key] as List).map((e) => e is Map ? '${e['id']}' : '$e').toList() : [];
 
-  /// One wizard step of the website's "Edit factory" page, shown as a tab.
-  Widget _stepForm(int step, List<DField> fields, {Map<String, String> extra = const {}}) => DashForm(
-        key: ValueKey('step$step-${_f.hashCode}'),
-        title: '',
-        path: '/my-factory',
-        single: true,
-        item: _f,
-        fields: fields,
-        savedMessage: td('factories.factory_updated'),
-        extra: {'save_step': '$step', ...extra},
-        multipart: true,
-        embedded: true,
-        onSaved: _load,
-      );
+  Future<void> _step(int step, String title, List<DField> fields, {Map<String, String> extra = const {}}) async {
+    final ok = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => DashForm(title: title, path: '/my-factory', single: true, item: _f, fields: fields, savedMessage: td('factories.factory_updated'), extra: {'save_step': '$step', ...extra}, multipart: true)));
+    if (ok == true) _load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,99 +267,48 @@ class _MyFactorySectionState extends State<MyFactorySection> {
           for (final k in ['name', 'short_description'])
             if (f?['${k}_$l'] is String && (f!['${k}_$l'] as String).isNotEmpty) '${k}_$l': f['${k}_$l'] as String,
     };
-    final tabs = [
-      '1. ${td('factories.info')}',
-      '2. ${td('factories.about_us')}',
-      '3. ${td('factories.factory_activities')}',
-      '4. ${td('factories.address_details')}',
-      '5. ${td('factories.catalog')}',
-      '6. ${td('factories.team')}',
-    ];
+    Widget tile(IconData icon, String label, VoidCallback onTap) => GestureDetector(
+          onTap: onTap,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+            child: Row(children: [
+              Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.gold3, borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: AppColors.gold)),
+              const SizedBox(width: 12),
+              Expanded(child: Text(label, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w700))),
+              Icon(L10n.i.isRtl ? Icons.chevron_left : Icons.chevron_right, color: AppColors.muted),
+            ]),
+          ),
+        );
     return DashPage(
       title: td('factories.my_factory'),
       child: f == null
           ? (_error != null ? emptyState(_error!) : emptyState('', loading: true))
-          : DefaultTabController(
-              length: tabs.length,
-              child: Column(children: [
-                Container(
-                  color: Colors.white,
-                  child: TabBar(
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    labelColor: AppColors.text,
-                    unselectedLabelColor: AppColors.muted,
-                    indicatorColor: AppColors.gold,
-                    labelStyle: GoogleFonts.tajawal(fontSize: 13.5, fontWeight: FontWeight.w800),
-                    unselectedLabelStyle: GoogleFonts.tajawal(fontSize: 13.5, fontWeight: FontWeight.w600),
-                    tabs: [for (final t in tabs) Tab(text: t)],
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: TabBarView(children: [
-                    // 1. Factory information (+ gates / categories / opportunities)
-                    Column(children: [
-                      GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatesCategoriesSection())).then((_) => _load()),
-                        child: Container(
-                          margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                          child: Row(children: [
-                            const Icon(Icons.account_tree_outlined, color: AppColors.gold),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text('${t('add_factory.gates_label', 'الأبواب')} / ${t('add_factory.categories_label', 'التصنيفات')}', style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700))),
-                            Icon(L10n.i.isRtl ? Icons.chevron_left : Icons.chevron_right, color: AppColors.muted),
-                          ]),
-                        ),
-                      ),
-                      Expanded(
-                        child: _stepForm(1, [
-                          DField('name', td('factories.factory_name'), required: true, translated: true),
-                          DField('founded_year', td('factories.founded_year'), type: FT.number),
-                          DField('country', td('factories.country'), type: FT.country),
-                          DField('employees_count', td('factories.employees_count'), type: FT.number),
-                          DField('nickname', td('factories.nickname')),
-                          DField('short_description', td('factories.short_description'), type: FT.multiline, translated: true, maxLength: 90),
-                          DField('logo', td('factories.logo'), type: FT.image),
-                        ], extra: keep),
-                      ),
-                    ]),
-                    // 2. About us
-                    _stepForm(2, [DField('about', td('factories.about_us'), type: FT.multiline, required: true, translated: true)]),
-                    // 3. Activities
-                    _stepForm(3, [DField('activities', td('factories.factory_activities'), type: FT.lines, required: true)]),
-                    // 4. Address / contact details
-                    _stepForm(4, [
-                      DField('working_hours_from', td('factories.working_hours_from'), hint: '09:00'),
-                      DField('working_hours_to', td('factories.working_hours_to'), hint: '17:00'),
-                      DField('phone', td('factories.phone')),
-                      DField('email', td('factories.email'), type: FT.email),
-                      DField('full_address', td('factories.full_address'), type: FT.multiline, translated: true),
-                      DField('governorate', td('factories.address_details'), translated: true),
-                    ]),
-                    // 5. Catalog  /  6. Team
-                    Column(children: [
-                      if ((f['subscription_type'] ?? 'free') == 'free')
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: const Color(0xFFFFF8E1), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFFE082))),
-                          child: Row(children: [
-                            const Icon(Icons.lock_outline, size: 18, color: Color(0xFF7A5600)),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(tri('يمكنك رفع الكتالوج الآن، لكنه لن يظهر في صفحة مصنعك إلا بعد ترقية الباقة.', 'Kataloğu şimdi yükleyebilirsiniz, ancak fabrika sayfanızda yalnızca planınızı yükselttikten sonra görünür.', 'You can upload the catalog now, but it will only appear on your factory page after you upgrade your plan.'), style: GoogleFonts.tajawal(fontSize: 12.5, color: const Color(0xFF7A5600), height: 1.6))),
-                          ]),
-                        ),
-                      const Expanded(child: MediaStepSection(team: false, embedded: true)),
-                    ]),
-                    const MediaStepSection(team: true, embedded: true),
-                  ]),
-                ),
-              ]),
-            ),
+          : ListView(padding: const EdgeInsets.only(top: 12, bottom: 30), children: [
+              tile(Icons.info_outline, td('factories.info'), () => _step(1, td('factories.info'), [
+                    DField('name', td('factories.factory_name'), required: true, translated: true),
+                    DField('founded_year', td('factories.founded_year'), type: FT.number),
+                    DField('country', td('factories.country'), type: FT.country),
+                    DField('employees_count', td('factories.employees_count'), type: FT.number),
+                    DField('nickname', td('factories.nickname')),
+                    DField('short_description', td('factories.short_description'), type: FT.multiline, translated: true, maxLength: 90),
+                    DField('logo', td('factories.logo'), type: FT.image),
+                  ], extra: keep)),
+              tile(Icons.account_tree_outlined, '${t('add_factory.gates_label', 'الأبواب')} / ${t('add_factory.categories_label', 'التصنيفات')}', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatesCategoriesSection())).then((_) => _load())),
+              tile(Icons.article_outlined, td('factories.about_us'), () => _step(2, td('factories.about_us'), [DField('about', td('factories.about_us'), type: FT.multiline, required: true, translated: true)])),
+              tile(Icons.list_alt, td('factories.factory_activities'), () => _step(3, td('factories.factory_activities'), [DField('activities', td('factories.factory_activities'), type: FT.lines, required: true)])),
+              tile(Icons.contact_phone_outlined, td('factories.address_details'), () => _step(4, td('factories.address_details'), [
+                    DField('working_hours_from', td('factories.working_hours_from'), hint: '09:00'),
+                    DField('working_hours_to', td('factories.working_hours_to'), hint: '17:00'),
+                    DField('phone', td('factories.phone')),
+                    DField('email', td('factories.email'), type: FT.email),
+                    DField('full_address', td('factories.full_address'), type: FT.multiline, translated: true),
+                    DField('governorate', td('factories.address_details'), translated: true),
+                  ])),
+              tile(Icons.picture_as_pdf_outlined, td('factories.catalog'), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MediaStepSection(team: false)))),
+              tile(Icons.groups_outlined, td('factories.team'), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MediaStepSection(team: true)))),
+            ]),
     );
   }
 }

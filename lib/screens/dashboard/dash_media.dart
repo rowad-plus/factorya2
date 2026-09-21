@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/net_image.dart';
 import '../../widgets/shell_widgets.dart';
+import '../opportunities/opportunities_screen.dart' show tri;
 import 'dash_kit.dart';
 
 class _NewItem {
@@ -34,6 +35,7 @@ class _MediaStepSectionState extends State<MediaStepSection> {
   List<Map<String, dynamic>> _existing = [];
   final List<_NewItem> _new = [];
   String? _capability;
+  bool _free = false;
   bool _loading = true;
   bool _saving = false;
 
@@ -48,6 +50,7 @@ class _MediaStepSectionState extends State<MediaStepSection> {
       final r = await ApiClient.i.get(dp('/my-factory'));
       final f = Map<String, dynamic>.from(r['data'] as Map);
       _existing = ApiClient.list(f[widget.team ? 'team_members' : 'catalogs']);
+      _free = (f['subscription_type'] ?? 'free') == 'free';
     } on ApiException catch (e) {
       if (e.status == 403) _capability = e.capability;
     } finally {
@@ -117,6 +120,17 @@ class _MediaStepSectionState extends State<MediaStepSection> {
             : _loading
                 ? emptyState('', loading: true)
                 : ListView(padding: const EdgeInsets.all(12), children: [
+                    if (!widget.team && _free)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: const Color(0xFFFFF8E1), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFFE082))),
+                        child: Row(children: [
+                          const Icon(Icons.lock_outline, size: 18, color: Color(0xFF7A5600)),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(tri('يمكنك رفع الكتالوج الآن، لكنه لن يظهر في صفحة مصنعك إلا بعد ترقية الباقة.', 'Kataloğu şimdi yükleyebilirsiniz, ancak fabrika sayfanızda yalnızca planınızı yükselttikten sonra görünür.', 'You can upload the catalog now, but it will only appear on your factory page after you upgrade your plan.'), style: GoogleFonts.tajawal(fontSize: 12.5, color: const Color(0xFF7A5600), height: 1.6))),
+                        ]),
+                      ),
                     for (final e in _existing)
                       Container(
                         margin: const EdgeInsets.only(bottom: 8),
