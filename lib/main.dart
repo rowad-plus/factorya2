@@ -248,7 +248,8 @@ class _MainShellState extends State<MainShell> {
           else
             const AppHeader(),
           // The header and bottom bar already cover the system insets: pages inside must not add them again.
-          Expanded(child: MediaQuery.removePadding(context: context, removeTop: true, removeBottom: true, child: child)),
+          // The shell Scaffold already shrinks for the keyboard: pages inside must not shrink for it a second time.
+          Expanded(child: MediaQuery(data: MediaQuery.of(context).removePadding(removeTop: true, removeBottom: true).removeViewInsets(removeBottom: true), child: child)),
         ],
       ),
       bottomNavigationBar: AppBottomNav(
