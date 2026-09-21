@@ -23,7 +23,8 @@ class _NewItem {
 /// My-factory steps 5 and 6: add catalog PDFs or team members, and list / delete the existing ones.
 class MediaStepSection extends StatefulWidget {
   final bool team;
-  const MediaStepSection({super.key, required this.team});
+  final bool embedded;
+  const MediaStepSection({super.key, required this.team, this.embedded = false});
 
   @override
   State<MediaStepSection> createState() => _MediaStepSectionState();
@@ -110,9 +111,8 @@ class _MediaStepSectionState extends State<MediaStepSection> {
   }
 
   @override
-  Widget build(BuildContext context) => DashPage(
-        title: widget.team ? td('factories.team') : td('factories.catalog'),
-        child: _capability != null
+  Widget build(BuildContext context) {
+    final body = _capability != null
             ? UpgradeNotice(capability: _capability)
             : _loading
                 ? emptyState('', loading: true)
@@ -154,6 +154,7 @@ class _MediaStepSectionState extends State<MediaStepSection> {
                       const SizedBox(height: 10),
                       ElevatedButton(onPressed: _saving ? null : _save, style: ElevatedButton.styleFrom(backgroundColor: AppColors.gold, padding: const EdgeInsets.symmetric(vertical: 14)), child: Text(td('dashboard.save'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w800, color: AppColors.dark))),
                     ],
-                  ]),
-      );
+                  ]);
+    return widget.embedded ? body : DashPage(title: widget.team ? td('factories.team') : td('factories.catalog'), child: body);
+  }
 }

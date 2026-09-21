@@ -79,7 +79,8 @@ class DField {
   final List<(String, String)> options;
   final String? hint;
   final String? fileField;
-  const DField(this.key, this.label, {this.type = FT.text, this.required = false, this.translated = false, this.options = const [], this.hint, this.fileField});
+  final int? maxLength;
+  const DField(this.key, this.label, {this.type = FT.text, this.required = false, this.translated = false, this.options = const [], this.hint, this.fileField, this.maxLength});
 }
 
 const statusOptions = [('active', 'active'), ('inactive', 'inactive')];
@@ -97,7 +98,10 @@ class DashForm extends StatefulWidget {
   final Map<String, String> extra;
   /// Always send multipart (needed for array fields such as `gate_ids[0]`).
   final bool multipart;
-  const DashForm({super.key, required this.title, required this.path, required this.fields, this.item, required this.savedMessage, this.single = false, this.extra = const {}, this.multipart = false});
+  /// Tab mode: no page chrome, and [onSaved] is called instead of closing the page.
+  final bool embedded;
+  final VoidCallback? onSaved;
+  const DashForm({super.key, required this.title, required this.path, required this.fields, this.item, required this.savedMessage, this.single = false, this.extra = const {}, this.multipart = false, this.embedded = false, this.onSaved});
 
   @override
   State<DashForm> createState() => _DashFormState();
@@ -107,6 +111,7 @@ class _DashFormState extends State<DashForm> {
   final Map<String, TextEditingController> _c = {};
   final Map<String, dynamic> _v = {};
   final Map<String, List<XFile>> _files = {};
+  final Map<String, List<TextEditingController>> _lines = {};
   List<Map<String, dynamic>> _cities = [];
   bool _busy = false;
 
@@ -130,6 +135,11 @@ class _DashFormState extends State<DashForm> {
           _v['country_id'] = it['country_id'] ?? AppData.countryId;
           _v['city_id'] = it['city_id'];
           _loadCities();
+        case FT.lines:
+          var raw = it[f.key] ?? it['${f.key}_${L10n.i.lang}'];
+          final rows = raw is List ? raw.map((e) => '$e').where((e) => e.trim().isNotEmpty).toList() : <String>[];
+          final count = rows.length < 4 ? 4 : rows.length;
+          _lines[f.key] = [for (var i = 0; i < count; i++) TextEditingController(text: i < rows.length ? rows[i] : '')];
         default:
           var val = it[f.key];
           if (f.translated) val ??= it['${f.key}_${L10n.i.lang}'];
@@ -143,6 +153,11 @@ class _DashFormState extends State<DashForm> {
   void dispose() {
     for (final c in _c.values) {
       c.dispose();
+    }
+    for (final l in _lines.values) {
+      for (final c in l) {
+        c.dispose();
+      }
     }
     super.dispose();
   }
@@ -187,7 +202,7 @@ class _DashFormState extends State<DashForm> {
           body['country_id'] = '${_v['country_id']}';
           body['city_id'] = '${_v['city_id']}';
         case FT.lines:
-          final rows = _c[f.key]!.text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+          final rows = (_lines[f.key] ?? []).map((c) => c.text.trim()).where((e) => e.isNotEmpty).toList();
           if (f.required && rows.isEmpty) return showAppToast(context, '⚠️ ${f.label}');
           for (var i = 0; i < rows.length; i++) {
             body['${f.key}_${L10n.i.lang}[$i]'] = rows[i];
@@ -221,7 +236,11 @@ class _DashFormState extends State<DashForm> {
       }
       if (!mounted) return;
       showAppToast(context, '✅ ${widget.savedMessage}');
-      Navigator.pop(context, true);
+      if (widget.embedded) {
+        widget.onSaved?.call();
+      } else {
+        Navigator.pop(context, true);
+      }
     } on ApiException catch (e) {
       if (mounted) showAppToast(context, '⚠️ ${e.message}');
     } finally {
@@ -245,6 +264,35 @@ class _DashFormState extends State<DashForm> {
     switch (f.type) {
       case FT.select:
         return DropdownButtonFormField<String>(initialValue: _v[f.key] as String?, isExpanded: true, decoration: _dec(label), items: [for (final o in f.options) DropdownMenuItem(value: o.$1, child: Text(o.$2.contains('.') ? td(o.$2) : o.$2, style: GoogleFonts.tajawal(fontSize: 13)))], onChanged: (v) => setState(() => _v[f.key] = v));
+      case FT.lines:
+        final rows = _lines[f.key] ?? [];
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(f.required ? '${f.label} *' : f.label, style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 10),
+          for (var i = 0; i < rows.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(children: [
+                if (i > 0)
+                  IconButton(
+                    onPressed: () => setState(() {
+                      rows.removeAt(i).dispose();
+                    }),
+                    icon: const Icon(Icons.cancel, color: AppColors.muted, size: 22),
+                  )
+                else
+                  const SizedBox(width: 48),
+                Expanded(child: TextField(controller: rows[i], decoration: _dec('${td('factories.activity')} ${i + 1}').copyWith(hintText: td('factories.activity_placeholder')))),
+              ]),
+            ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              onPressed: () => setState(() => rows.add(TextEditingController())),
+              child: Text(td('factories.add_activity'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.gold)),
+            ),
+          ),
+        ]);
       case FT.bool:
         return SwitchListTile(value: _v[f.key] == true, onChanged: (v) => setState(() => _v[f.key] = v), title: Text(f.label, style: GoogleFonts.tajawal(fontSize: 13.5)), activeThumbColor: AppColors.gold, contentPadding: EdgeInsets.zero);
       case FT.country:
@@ -295,7 +343,8 @@ class _DashFormState extends State<DashForm> {
       default:
         return TextField(
           controller: _c[f.key],
-          maxLines: f.type == FT.multiline ? 4 : (f.type == FT.lines ? 5 : 1),
+          maxLines: f.type == FT.multiline ? (f.key == 'about' ? 9 : 4) : 1,
+          maxLength: f.maxLength,
           keyboardType: f.type == FT.number ? TextInputType.number : (f.type == FT.email ? TextInputType.emailAddress : (f.type == FT.url ? TextInputType.url : null)),
           textDirection: f.type == FT.email || f.type == FT.url ? TextDirection.ltr : null,
           decoration: _dec(label).copyWith(helperText: f.hint),
@@ -305,9 +354,7 @@ class _DashFormState extends State<DashForm> {
 
   @override
   Widget build(BuildContext context) {
-    return DashPage(
-      title: widget.title,
-      child: ListView(
+    final list = ListView(
         padding: const EdgeInsets.all(14),
         children: [
           for (final f in widget.fields) Padding(padding: const EdgeInsets.only(bottom: 12), child: _field(f)),
@@ -319,8 +366,8 @@ class _DashFormState extends State<DashForm> {
           ),
           const SizedBox(height: 20),
         ],
-      ),
-    );
+      );
+    return widget.embedded ? list : DashPage(title: widget.title, child: list);
   }
 }
 
