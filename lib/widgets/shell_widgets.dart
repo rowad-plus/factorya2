@@ -54,7 +54,8 @@ class AppHeader extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () => context.go('/'),
-                  child: SvgPicture.asset('assets/images/logo_white.svg', width: 38, height: 38),
+                  child: SvgPicture.asset('assets/images/logo_white.svg',
+                      width: 38, height: 38),
                 ),
                 const Spacer(),
                 const _CountryButton(),
@@ -386,7 +387,10 @@ class AppBottomNav extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([L10n.i, AppData.revision, AuthService.i]),
       builder: (context, _) {
-        final unread = AuthService.i.isLoggedIn ? AppData.messages.fold<int>(0, (sum, m) => sum + ((m['unread'] as int?) ?? 0)) : 0;
+        final unread = AuthService.i.isLoggedIn
+            ? AppData.messages
+                .fold<int>(0, (sum, m) => sum + ((m['unread'] as int?) ?? 0))
+            : 0;
         final items = [
           (Icons.home_outlined, t('nav.home', 'الرئيسية')),
           (Icons.grid_view, t('nav.gates', 'الأبواب')),
@@ -434,18 +438,26 @@ class AppBottomNav extends StatelessWidget {
                                     isLabelVisible: i == 2 && unread > 0,
                                     label: Text('$unread'),
                                     backgroundColor: AppColors.red,
-                                    child: Icon(items[i].$1, size: 24, color: currentIndex == i ? AppColors.gold : const Color(0xFF999999)),
+                                    child: Icon(items[i].$1,
+                                        size: i == 2 ? 28 : 24,
+                                        semanticLabel: items[i].$2,
+                                        color: currentIndex == i
+                                            ? AppColors.gold
+                                            : const Color(0xFF999999)),
                                   ),
-                                  const SizedBox(height: 3),
-                                  Text(items[i].$2,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.tajawal(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: currentIndex == i
-                                              ? AppColors.gold
-                                              : const Color(0xFF999999))),
+                                  // The chat tab is icon-only.
+                                  if (i != 2) ...[
+                                    const SizedBox(height: 3),
+                                    Text(items[i].$2,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.tajawal(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: currentIndex == i
+                                                ? AppColors.gold
+                                                : const Color(0xFF999999))),
+                                  ],
                                 ],
                               ),
                             ),

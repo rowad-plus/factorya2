@@ -37,6 +37,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
   Color _primary = const Color(0xFFC8861A);
   Color _light = const Color(0xFFFEF8E8);
   Color _title = const Color(0xFF1A1208);
+
   /// 1 = classic, 2..6 = the site's premium designs (all share the 9-tab layout).
   int _version = 1;
   String _cover = '';
@@ -62,7 +63,8 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
   Future<void> _load() async {
     try {
       final res = await ApiClient.i.get('/factories/$_id');
-      if (mounted) setState(() => _f = Map<String, dynamic>.from(res['data'] as Map));
+      if (mounted)
+        setState(() => _f = Map<String, dynamic>.from(res['data'] as Map));
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
       return;
@@ -98,9 +100,15 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
   }
 
   bool get _featured => _f?['is_featured'] == true;
-  String get _name => AppData.tr(_f ?? {}, 'name').isNotEmpty ? AppData.tr(_f!, 'name') : widget.factory.name;
+  String get _name => AppData.tr(_f ?? {}, 'name').isNotEmpty
+      ? AppData.tr(_f!, 'name')
+      : widget.factory.name;
 
-  static String _strip(String html) => html.replaceAll(RegExp(r'<[^>]*>'), ' ').replaceAll('&nbsp;', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+  static String _strip(String html) => html
+      .replaceAll(RegExp(r'<[^>]*>'), ' ')
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 
   @override
   Widget build(BuildContext context) {
@@ -114,24 +122,29 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
             bottom: false,
             child: f == null
                 ? Stack(children: [
-                    Center(child: _error != null ? Text(_error!, style: GoogleFonts.tajawal(color: AppColors.muted)) : CircularProgressIndicator(color: _primary)),
+                    Center(
+                        child: _error != null
+                            ? Text(_error!,
+                                style:
+                                    GoogleFonts.tajawal(color: AppColors.muted))
+                            : CircularProgressIndicator(color: _primary)),
                     _back(),
                   ])
                 : Stack(children: [
                     _version >= 2
                         ? _premium(f)
                         : ListView(
-                      padding: EdgeInsets.zero,
-                      children: [
-                if (!_featured) const HeaderBanner(),
-                        _header(f),
-                        _tabs(),
-                        if (_tab == 0) _aboutTab(f),
-                        if (_tab == 1 && _featured) _postsTab(f),
-                        if (_tab == (_featured ? 2 : 1)) _contactTab(f),
-                        const SiteFooter(),
-                      ],
-                    ),
+                            padding: EdgeInsets.zero,
+                            children: [
+                              if (!_featured) const HeaderBanner(),
+                              _header(f),
+                              _tabs(),
+                              if (_tab == 0) _aboutTab(f),
+                              if (_tab == 1 && _featured) _postsTab(f),
+                              if (_tab == (_featured ? 2 : 1)) _contactTab(f),
+                              const SiteFooter(),
+                            ],
+                          ),
                     _back(),
                   ]),
           ),
@@ -147,9 +160,16 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
         child: GestureDetector(
           onTap: () => Navigator.of(context).maybePop(),
           child: Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 6)]),
-            child: Icon(L10n.i.isRtl ? Icons.arrow_forward : Icons.arrow_back, size: 18, color: AppColors.dark),
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 6)
+                ]),
+            child: Icon(L10n.i.isRtl ? Icons.arrow_forward : Icons.arrow_back,
+                size: 18, color: AppColors.dark),
           ),
         ),
       );
@@ -168,31 +188,64 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
     return '';
   }
 
-  String _flag(String? code) => code == null || code.length != 2 ? '' : code.toUpperCase().runes.map((c) => String.fromCharCode(127397 + c)).join();
+  String _flag(String? code) => code == null || code.length != 2
+      ? ''
+      : code
+          .toUpperCase()
+          .runes
+          .map((c) => String.fromCharCode(127397 + c))
+          .join();
 
   Widget _header(Map<String, dynamic> f) {
-    final country = f['country'] is Map ? Map<String, dynamic>.from(f['country'] as Map) : <String, dynamic>{};
-    final desc = _strip(AppData.tr(f, 'short_description').isNotEmpty ? AppData.tr(f, 'short_description') : AppData.tr(f, 'about'));
-    final opps = f['opportunities'] is List ? ApiClient.list(f['opportunities']) : <Map<String, dynamic>>[];
+    final country = f['country'] is Map
+        ? Map<String, dynamic>.from(f['country'] as Map)
+        : <String, dynamic>{};
+    final desc = _strip(AppData.tr(f, 'short_description').isNotEmpty
+        ? AppData.tr(f, 'short_description')
+        : AppData.tr(f, 'about'));
+    final opps = f['opportunities'] is List
+        ? ApiClient.list(f['opportunities'])
+        : <Map<String, dynamic>>[];
     final nick = '${f['nickname'] ?? f['id']}';
-    final ownFactory = AuthService.i.factoryId != null && '${AuthService.i.factoryId}' == '${f['id']}';
+    final ownFactory = AuthService.i.factoryId != null &&
+        '${AuthService.i.factoryId}' == '${f['id']}';
     final showChat = f['chat_enabled'] == true && !ownFactory;
 
-    Widget btn(IconData icon, String label, VoidCallback onTap, {bool primary = false}) => Expanded(
-          child: GestureDetector(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-              decoration: BoxDecoration(
-                color: primary ? _light : Colors.white,
-                border: Border.all(color: primary ? _primary : const Color(0xFFE2E8F0)),
-                borderRadius: BorderRadius.circular(10),
+    Widget btn(IconData icon, String label, VoidCallback onTap,
+            {bool primary = false, bool iconOnly = false}) =>
+        Expanded(
+          flex: iconOnly ? 1 : 3,
+          child: Tooltip(
+            message: label,
+            child: GestureDetector(
+              onTap: onTap,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: primary ? _light : Colors.white,
+                  border: Border.all(
+                      color: primary ? _primary : const Color(0xFFE2E8F0)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: iconOnly
+                    ? Icon(icon,
+                        size: 22,
+                        color: primary ? _primary : const Color(0xFF718096),
+                        semanticLabel: label)
+                    : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        Icon(icon, size: 18, color: const Color(0xFFA0AEC0)),
+                        const SizedBox(width: 6),
+                        Flexible(
+                            child: Text(label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.tajawal(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF4A5568)))),
+                      ]),
               ),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(icon, size: 18, color: primary ? _primary : const Color(0xFFA0AEC0)),
-                const SizedBox(width: 6),
-                Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 12.5, fontWeight: FontWeight.w600, color: primary ? _primary : const Color(0xFF4A5568)))),
-              ]),
             ),
           ),
         );
@@ -206,7 +259,12 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.black.withAlpha(13)),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 30, offset: const Offset(0, 10))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withAlpha(8),
+                blurRadius: 30,
+                offset: const Offset(0, 10))
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,11 +273,21 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 72, height: 72,
+                  width: 72,
+                  height: 72,
                   padding: const EdgeInsets.all(8),
                   clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(color: const Color(0xFFFFEFE0), borderRadius: BorderRadius.circular(14)),
-                  child: NetImage(url: AppData.logoUrl(f), brandFallback: true, fallback: widget.factory.emoji, fallbackSize: 30, fit: BoxFit.contain, width: 56, height: 56),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFFFEFE0),
+                      borderRadius: BorderRadius.circular(14)),
+                  child: NetImage(
+                      url: AppData.logoUrl(f),
+                      brandFallback: true,
+                      fallback: widget.factory.emoji,
+                      fallbackSize: 30,
+                      fit: BoxFit.contain,
+                      width: 56,
+                      height: 56),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -228,15 +296,30 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                     children: [
                       Row(children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(20)),
-                          child: Directionality(textDirection: TextDirection.ltr, child: Text('@$nick', style: GoogleFonts.tajawal(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFFD97706)))),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(20)),
+                          child: Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: Text('@$nick',
+                                  style: GoogleFonts.tajawal(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFFD97706)))),
                         ),
                         const SizedBox(width: 6),
-                        Text(_flag(country['code'] as String?), style: const TextStyle(fontSize: 20)),
+                        Text(_flag(country['code'] as String?),
+                            style: const TextStyle(fontSize: 20)),
                       ]),
                       const SizedBox(height: 6),
-                      Text(_name, style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.w700, color: const Color(0xFF1A202C), height: 1.3)),
+                      Text(_name,
+                          style: GoogleFonts.tajawal(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1A202C),
+                              height: 1.3)),
                     ],
                   ),
                 ),
@@ -244,18 +327,32 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
             ),
             if (desc.isNotEmpty) ...[
               const SizedBox(height: 10),
-              Text(desc, maxLines: 4, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 13.5, color: const Color(0xFF718096), height: 1.6)),
+              Text(desc,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.tajawal(
+                      fontSize: 13.5,
+                      color: const Color(0xFF718096),
+                      height: 1.6)),
             ],
             if (opps.isNotEmpty) ...[
               const SizedBox(height: 12),
               Wrap(
-                spacing: 8, runSpacing: 8,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   for (final o in opps)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                      decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(20)),
-                      child: Text(_oppLabel(o), style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF4B5563))),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 5),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Text(_oppLabel(o),
+                          style: GoogleFonts.tajawal(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF4B5563))),
                     ),
                 ],
               ),
@@ -268,13 +365,26 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                     LoginModal.show(context);
                     return;
                   }
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(factoryId: '${f['id']}', name: _name, avatar: _name, color: _primary)));
-                }, primary: true),
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                              factoryId: '${f['id']}',
+                              name: _name,
+                              avatar: _name,
+                              color: _primary)));
+                }, primary: true, iconOnly: true),
                 const SizedBox(width: 8),
               ],
-              btn(Icons.description_outlined, t('factory_profile.request_quote', 'طلب عرض سعر'), () => _QuoteSheet.show(context, f, _primary)),
+              btn(
+                  Icons.description_outlined,
+                  t('factory_profile.request_quote', 'طلب عرض سعر'),
+                  () => _QuoteSheet.show(context, f, _primary)),
               const SizedBox(width: 8),
-              btn(Icons.share_outlined, t('factory_profile.share_factory', 'مشاركة'), () => Share.share('$_name\nhttps://factorya.net/$nick')),
+              btn(
+                  Icons.share_outlined,
+                  t('factory_profile.share_factory', 'مشاركة'),
+                  () => Share.share('$_name\nhttps://factorya.net/$nick'), iconOnly: true),
             ]),
           ],
         ),
@@ -285,7 +395,17 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
   // ───────────────────────── premium designs (themes 2–6) ─────────────────────────
 
   Widget _premium(Map<String, dynamic> f) {
-    const ids = ['about', 'posts', 'catalogs', 'branches', 'partners', 'products', 'videos', 'team', 'contact'];
+    const ids = [
+      'about',
+      'posts',
+      'catalogs',
+      'branches',
+      'partners',
+      'products',
+      'videos',
+      'team',
+      'contact'
+    ];
     final labels = {
       'about': t('factory_tabs.about', 'نبذة'),
       'posts': t('factory_tabs.posts', 'المنشورات'),
@@ -304,15 +424,40 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       case 'posts':
         body = _postsTab(f);
       case 'catalogs':
-        body = _section('factory_tabs.catalogs', 'الكتالوجات', _Catalogs(f: f, primary: _primary));
+        body = _section('factory_tabs.catalogs', 'الكتالوجات',
+            _Catalogs(f: f, primary: _primary));
       case 'branches':
-        body = _section('factory_tabs.branches', 'الفروع', _ListLoader(path: '/factories/$_id/branches', builder: _branches, emptyKey: 'factory_profile.no_branches'));
+        body = _section(
+            'factory_tabs.branches',
+            'الفروع',
+            _ListLoader(
+                path: '/factories/$_id/branches',
+                builder: _branches,
+                emptyKey: 'factory_profile.no_branches'));
       case 'partners':
-        body = _section('factory_tabs.partners', 'الشركاء', _ListLoader(path: '/factories/$_id/clients', builder: _partners, emptyKey: 'factory_profile.no_clients'));
+        body = _section(
+            'factory_tabs.partners',
+            'الشركاء',
+            _ListLoader(
+                path: '/factories/$_id/clients',
+                builder: _partners,
+                emptyKey: 'factory_profile.no_clients'));
       case 'products':
-        body = _section('factory_tabs.products', 'المنتجات', _ListLoader(path: '/factories/$_id/products', builder: _products, emptyKey: 'factory_profile.no_products'));
+        body = _section(
+            'factory_tabs.products',
+            'المنتجات',
+            _ListLoader(
+                path: '/factories/$_id/products',
+                builder: _products,
+                emptyKey: 'factory_profile.no_products'));
       case 'videos':
-        body = _section('factory_tabs.videos', 'الفيديوهات', _ListLoader(path: '/factories/$_id/videos', builder: _videos, emptyKey: 'factory_profile.no_videos'));
+        body = _section(
+            'factory_tabs.videos',
+            'الفيديوهات',
+            _ListLoader(
+                path: '/factories/$_id/videos',
+                builder: _videos,
+                emptyKey: 'factory_profile.no_videos'));
       case 'team':
         body = _section('factory_tabs.team', 'الفريق', _team(f));
       case 'contact':
@@ -325,17 +470,31 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-                if (!_featured) const HeaderBanner(),
-          if (_cover.isNotEmpty) SizedBox(height: 180, width: double.infinity, child: NetImage(url: _cover, fallback: '', width: double.infinity, height: 180)),
+          if (!_featured) const HeaderBanner(),
+          if (_cover.isNotEmpty)
+            SizedBox(
+                height: 180,
+                width: double.infinity,
+                child: NetImage(
+                    url: _cover,
+                    fallback: '',
+                    width: double.infinity,
+                    height: 180)),
           Container(
-            transform: Matrix4.translationValues(0, _cover.isNotEmpty ? -30 : 0, 0),
+            transform:
+                Matrix4.translationValues(0, _cover.isNotEmpty ? -30 : 0, 0),
             margin: const EdgeInsets.symmetric(horizontal: 14),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: dark ? const Color(0xFF1A1208) : Colors.white,
               borderRadius: BorderRadius.circular(_version == 3 ? 28 : 20),
               border: Border.all(color: _primary.withAlpha(60)),
-              boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 24, offset: const Offset(0, 8))],
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8))
+              ],
             ),
             child: _premiumHero(f, dark),
           ),
@@ -353,8 +512,17 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: on ? _primary : Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: on ? _primary : AppColors.border)),
-                    child: Text(labels[ids[i]]!, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700, color: on ? Colors.white : const Color(0xFF4A5568))),
+                    decoration: BoxDecoration(
+                        color: on ? _primary : Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                            color: on ? _primary : AppColors.border)),
+                    child: Text(labels[ids[i]]!,
+                        style: GoogleFonts.tajawal(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                on ? Colors.white : const Color(0xFF4A5568))),
                   ),
                 );
               },
@@ -368,36 +536,70 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
   }
 
   Widget _premiumHero(Map<String, dynamic> f, bool dark) {
-    final country = f['country'] is Map ? Map<String, dynamic>.from(f['country'] as Map) : <String, dynamic>{};
-    final desc = _strip(AppData.tr(f, 'short_description').isNotEmpty ? AppData.tr(f, 'short_description') : AppData.tr(f, 'about'));
+    final country = f['country'] is Map
+        ? Map<String, dynamic>.from(f['country'] as Map)
+        : <String, dynamic>{};
+    final desc = _strip(AppData.tr(f, 'short_description').isNotEmpty
+        ? AppData.tr(f, 'short_description')
+        : AppData.tr(f, 'about'));
     final nick = '${f['nickname'] ?? f['id']}';
     final fg = dark ? Colors.white : const Color(0xFF1A202C);
-    final ownFactory = AuthService.i.factoryId != null && '${AuthService.i.factoryId}' == '${f['id']}';
+    final ownFactory = AuthService.i.factoryId != null &&
+        '${AuthService.i.factoryId}' == '${f['id']}';
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
-          width: 76, height: 76,
+          width: 76,
+          height: 76,
           padding: const EdgeInsets.all(8),
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: _primary.withAlpha(90), width: 2)),
-          child: NetImage(url: AppData.logoUrl(f), brandFallback: true, fallbackSize: 30, fit: BoxFit.contain, width: 60, height: 60),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _primary.withAlpha(90), width: 2)),
+          child: NetImage(
+              url: AppData.logoUrl(f),
+              brandFallback: true,
+              fallbackSize: 30,
+              fit: BoxFit.contain,
+              width: 60,
+              height: 60),
         ),
         const SizedBox(width: 14),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Directionality(textDirection: TextDirection.ltr, child: Text('@$nick', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w700, color: _primary))),
+              Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text('@$nick',
+                      style: GoogleFonts.tajawal(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _primary))),
               const SizedBox(width: 6),
-              Text(_flag(country['code'] as String?), style: const TextStyle(fontSize: 18)),
+              Text(_flag(country['code'] as String?),
+                  style: const TextStyle(fontSize: 18)),
             ]),
             const SizedBox(height: 4),
-            Text(_name, style: GoogleFonts.tajawal(fontSize: 21, fontWeight: FontWeight.w800, color: fg, height: 1.3)),
+            Text(_name,
+                style: GoogleFonts.tajawal(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                    color: fg,
+                    height: 1.3)),
           ]),
         ),
       ]),
       if (desc.isNotEmpty) ...[
         const SizedBox(height: 10),
-        Text(desc, maxLines: 3, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 13.5, color: dark ? Colors.white70 : const Color(0xFF718096), height: 1.6)),
+        Text(desc,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.tajawal(
+                fontSize: 13.5,
+                color: dark ? Colors.white70 : const Color(0xFF718096),
+                height: 1.6)),
       ],
       const SizedBox(height: 14),
       Row(children: [
@@ -405,29 +607,53 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsetsDirectional.only(end: 8),
-              child: ElevatedButton.icon(
+              child: ElevatedButton(
                 onPressed: () {
                   if (!AuthService.i.isLoggedIn) {
                     LoginModal.show(context);
                     return;
                   }
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(factoryId: '${f['id']}', name: _name, avatar: _name, color: _primary)));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                              factoryId: '${f['id']}',
+                              name: _name,
+                              avatar: _name,
+                              color: _primary)));
                 },
-                icon: const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.white),
-                label: Text(t('chat.title', 'الرسائل'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w700, color: Colors.white)),
-                style: ElevatedButton.styleFrom(backgroundColor: _primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: const Icon(Icons.chat_bubble_outline,
+                    size: 22, color: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12))),
               ),
             ),
           ),
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _QuoteSheet.show(context, f, _primary),
-            icon: Icon(Icons.description_outlined, size: 16, color: dark ? Colors.white : const Color(0xFF4A5568)),
-            label: Text(t('factory_profile.request_quote', 'طلب عرض سعر'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w700, color: dark ? Colors.white : const Color(0xFF4A5568))),
-            style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), side: BorderSide(color: dark ? Colors.white38 : const Color(0xFFE2E8F0))),
+            icon: Icon(Icons.description_outlined,
+                size: 16,
+                color: dark ? Colors.white : const Color(0xFF4A5568)),
+            label: Text(t('factory_profile.request_quote', 'طلب عرض سعر'),
+                style: GoogleFonts.tajawal(
+                    fontWeight: FontWeight.w700,
+                    color: dark ? Colors.white : const Color(0xFF4A5568))),
+            style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                side: BorderSide(
+                    color: dark ? Colors.white38 : const Color(0xFFE2E8F0))),
           ),
         ),
-        IconButton(onPressed: () => Share.share('$_name\nhttps://factorya.net/$nick'), icon: Icon(Icons.share_outlined, color: dark ? Colors.white70 : const Color(0xFFA0AEC0))),
+        IconButton(
+            onPressed: () => Share.share('$_name\nhttps://factorya.net/$nick'),
+            icon: Icon(Icons.share_outlined,
+                color: dark ? Colors.white70 : const Color(0xFFA0AEC0))),
       ]),
     ]);
   }
@@ -452,8 +678,18 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                 onTap: () => setState(() => _tab = i),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _tab == i ? _primary : Colors.transparent, width: 3))),
-                  child: Text(labels[i], textAlign: TextAlign.center, style: GoogleFonts.tajawal(fontSize: 14, fontWeight: _tab == i ? FontWeight.w700 : FontWeight.w500, color: _tab == i ? _primary : AppColors.muted)),
+                  decoration: BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(
+                              color: _tab == i ? _primary : Colors.transparent,
+                              width: 3))),
+                  child: Text(labels[i],
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.tajawal(
+                          fontSize: 14,
+                          fontWeight:
+                              _tab == i ? FontWeight.w700 : FontWeight.w500,
+                          color: _tab == i ? _primary : AppColors.muted)),
                 ),
               ),
             ),
@@ -468,7 +704,10 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
         width: double.infinity,
         margin: margin ?? const EdgeInsets.fromLTRB(16, 12, 16, 0),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.black.withAlpha(10))),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black.withAlpha(10))),
         child: child,
       );
 
@@ -486,28 +725,66 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
             children: [
               _FactoryCover(factoryId: _id, fallback: f['image'] as String?),
               const SizedBox(height: 12),
-              Text(L10n.i.lang == 'ar' ? 'نبذة عن $n' : 'About $n', style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w700, color: _title)),
+              Text(L10n.i.lang == 'ar' ? 'نبذة عن $n' : 'About $n',
+                  style: GoogleFonts.tajawal(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _title)),
               const SizedBox(height: 8),
-              Text(about.isNotEmpty ? about : short, style: GoogleFonts.tajawal(fontSize: 14, color: const Color(0xFF4A5568), height: 1.8)),
+              Text(about.isNotEmpty ? about : short,
+                  style: GoogleFonts.tajawal(
+                      fontSize: 14,
+                      color: const Color(0xFF4A5568),
+                      height: 1.8)),
               if (founded != null || employees != null) ...[
                 const SizedBox(height: 8),
                 Text(
                   [
-                    if (founded != null) '${t('factory_profile.founded_in', 'تأسست عام')} $founded.',
-                    if (employees != null) '${t('factory_profile.employees_more_than', 'يعمل بها أكثر من')} $employees ${t('factory_profile.employees', 'موظف')}',
+                    if (founded != null)
+                      '${t('factory_profile.founded_in', 'تأسست عام')} $founded.',
+                    if (employees != null)
+                      '${t('factory_profile.employees_more_than', 'يعمل بها أكثر من')} $employees ${t('factory_profile.employees', 'موظف')}',
                   ].join(' '),
-                  style: GoogleFonts.tajawal(fontSize: 14, color: const Color(0xFF4A5568), height: 1.8),
+                  style: GoogleFonts.tajawal(
+                      fontSize: 14,
+                      color: const Color(0xFF4A5568),
+                      height: 1.8),
                 ),
               ],
             ],
           ),
         ),
         if (_featured && stacked) ...[
-          _section('factory_tabs.catalogs', 'الكتالوجات', _Catalogs(f: f, primary: _primary)),
-          _section('factory_tabs.branches', 'الفروع', _ListLoader(path: '/factories/$_id/branches', builder: (rows) => _branches(rows), emptyKey: 'factory_profile.no_branches')),
-          _section('factory_tabs.partners', 'الشركاء', _ListLoader(path: '/factories/$_id/clients', builder: (rows) => _partners(rows), emptyKey: 'factory_profile.no_partners')),
-          _section('factory_tabs.products', 'المنتجات', _ListLoader(path: '/factories/$_id/products', builder: (rows) => _products(rows), emptyKey: 'factory_profile.no_products')),
-          _section('factory_tabs.videos', 'الفيديوهات', _ListLoader(path: '/factories/$_id/videos', builder: (rows) => _videos(rows), emptyKey: 'factory_profile.no_videos')),
+          _section('factory_tabs.catalogs', 'الكتالوجات',
+              _Catalogs(f: f, primary: _primary)),
+          _section(
+              'factory_tabs.branches',
+              'الفروع',
+              _ListLoader(
+                  path: '/factories/$_id/branches',
+                  builder: (rows) => _branches(rows),
+                  emptyKey: 'factory_profile.no_branches')),
+          _section(
+              'factory_tabs.partners',
+              'الشركاء',
+              _ListLoader(
+                  path: '/factories/$_id/clients',
+                  builder: (rows) => _partners(rows),
+                  emptyKey: 'factory_profile.no_partners')),
+          _section(
+              'factory_tabs.products',
+              'المنتجات',
+              _ListLoader(
+                  path: '/factories/$_id/products',
+                  builder: (rows) => _products(rows),
+                  emptyKey: 'factory_profile.no_products')),
+          _section(
+              'factory_tabs.videos',
+              'الفيديوهات',
+              _ListLoader(
+                  path: '/factories/$_id/videos',
+                  builder: (rows) => _videos(rows),
+                  emptyKey: 'factory_profile.no_videos')),
           _section('factory_tabs.team', 'الفريق', _team(f)),
         ],
       ],
@@ -519,9 +796,17 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Container(width: 4, height: 18, decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(2))),
+              Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                      color: _primary, borderRadius: BorderRadius.circular(2))),
               const SizedBox(width: 8),
-              Text(t(key, fallback), style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w700, color: _title)),
+              Text(t(key, fallback),
+                  style: GoogleFonts.tajawal(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _title)),
             ]),
             const SizedBox(height: 12),
             child,
@@ -529,16 +814,30 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
         ),
       );
 
-  Widget _detail(IconData icon, String label, String value) => value.trim().isEmpty
-      ? const SizedBox.shrink()
-      : Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Icon(icon, size: 16, color: _primary),
-            const SizedBox(width: 8),
-            Expanded(child: Text.rich(TextSpan(children: [TextSpan(text: '$label: ', style: GoogleFonts.tajawal(fontSize: 12.5, color: AppColors.muted)), TextSpan(text: value, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.text))]))),
-          ]),
-        );
+  Widget _detail(IconData icon, String label, String value) =>
+      value.trim().isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child:
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Icon(icon, size: 16, color: _primary),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: Text.rich(TextSpan(children: [
+                  TextSpan(
+                      text: '$label: ',
+                      style: GoogleFonts.tajawal(
+                          fontSize: 12.5, color: AppColors.muted)),
+                  TextSpan(
+                      text: value,
+                      style: GoogleFonts.tajawal(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text))
+                ]))),
+              ]),
+            );
 
   Widget _branches(List<Map<String, dynamic>> rows) => Column(
         children: [
@@ -547,15 +846,41 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _detail(Icons.location_on_outlined, t('factory_profile.location', 'الموقع'), AppData.tr(b, 'address').isNotEmpty ? AppData.tr(b, 'address') : AppData.tr(b, 'city')),
-                _detail(Icons.email_outlined, t('factory_profile.email', 'البريد'), '${b['email'] ?? ''}'),
-                _detail(Icons.access_time, t('factory_profile.working_hours', 'ساعات العمل'), '${b['working_hours'] ?? ''}'),
-                _detail(Icons.phone_outlined, t('factory_profile.contact_number', 'رقم التواصل'), '${b['phone'] ?? ''}'),
-                if ('${b['map_url'] ?? ''}'.isNotEmpty)
-                  TextButton.icon(onPressed: () => _open('${b['map_url']}'), icon: Icon(Icons.map_outlined, size: 16, color: _primary), label: Text(t('post.view_map', 'عرض الخريطة'), style: GoogleFonts.tajawal(color: _primary, fontWeight: FontWeight.w700))),
-              ]),
+              decoration: BoxDecoration(
+                  color: const Color(0xFFFAFAFA),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border)),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _detail(
+                        Icons.location_on_outlined,
+                        t('factory_profile.location', 'الموقع'),
+                        AppData.tr(b, 'address').isNotEmpty
+                            ? AppData.tr(b, 'address')
+                            : AppData.tr(b, 'city')),
+                    _detail(
+                        Icons.email_outlined,
+                        t('factory_profile.email', 'البريد'),
+                        '${b['email'] ?? ''}'),
+                    _detail(
+                        Icons.access_time,
+                        t('factory_profile.working_hours', 'ساعات العمل'),
+                        '${b['working_hours'] ?? ''}'),
+                    _detail(
+                        Icons.phone_outlined,
+                        t('factory_profile.contact_number', 'رقم التواصل'),
+                        '${b['phone'] ?? ''}'),
+                    if ('${b['map_url'] ?? ''}'.isNotEmpty)
+                      TextButton.icon(
+                          onPressed: () => _open('${b['map_url']}'),
+                          icon: Icon(Icons.map_outlined,
+                              size: 16, color: _primary),
+                          label: Text(t('post.view_map', 'عرض الخريطة'),
+                              style: GoogleFonts.tajawal(
+                                  color: _primary,
+                                  fontWeight: FontWeight.w700))),
+                  ]),
             ),
         ],
       );
@@ -570,9 +895,25 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
         children: [
           for (final c in rows)
             Column(children: [
-              Expanded(child: Container(width: double.infinity, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(10)), child: NetImage(url: (c['image_url'] as String?) ?? '', fallback: '🤝', fit: BoxFit.contain, width: double.infinity, height: double.infinity))),
+              Expanded(
+                  child: Container(
+                      width: double.infinity,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFAFAFA),
+                          borderRadius: BorderRadius.circular(10)),
+                      child: NetImage(
+                          url: (c['image_url'] as String?) ?? '',
+                          fallback: '🤝',
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity))),
               const SizedBox(height: 4),
-              Text(AppData.tr(c, 'name'), maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 11.5, fontWeight: FontWeight.w600)),
+              Text(AppData.tr(c, 'name'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.tajawal(
+                      fontSize: 11.5, fontWeight: FontWeight.w600)),
             ]),
         ],
       );
@@ -591,11 +932,26 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
               return GestureDetector(
                 onTap: () => context.push('/product/${p.id}'),
                 child: Container(
-                  decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFFAFAFA),
+                      borderRadius: BorderRadius.circular(10)),
                   clipBehavior: Clip.antiAlias,
                   child: Column(children: [
-                    Expanded(child: NetImage(url: p.imageUrl, fallback: p.emoji, fallbackSize: 30, width: double.infinity, height: double.infinity)),
-                    Padding(padding: const EdgeInsets.all(8), child: Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: GoogleFonts.tajawal(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                    Expanded(
+                        child: NetImage(
+                            url: p.imageUrl,
+                            fallback: p.emoji,
+                            fallbackSize: 30,
+                            width: double.infinity,
+                            height: double.infinity)),
+                    Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(p.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.tajawal(
+                                fontSize: 12.5, fontWeight: FontWeight.w600))),
                   ]),
                 ),
               );
@@ -612,11 +968,19 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                 height: 190,
                 margin: const EdgeInsets.only(bottom: 10),
                 clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(color: AppColors.dark, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                    color: AppColors.dark,
+                    borderRadius: BorderRadius.circular(12)),
                 child: Stack(fit: StackFit.expand, children: [
-                  NetImage(url: (v['thumbnail_url'] as String?) ?? '', fallback: '', width: double.infinity, height: 190),
+                  NetImage(
+                      url: (v['thumbnail_url'] as String?) ?? '',
+                      fallback: '',
+                      width: double.infinity,
+                      height: 190),
                   Container(color: Colors.black.withAlpha(60)),
-                  const Center(child: Icon(Icons.play_circle_fill, size: 54, color: Colors.white)),
+                  const Center(
+                      child: Icon(Icons.play_circle_fill,
+                          size: 54, color: Colors.white)),
                 ]),
               ),
             ),
@@ -624,8 +988,12 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       );
 
   Widget _team(Map<String, dynamic> f) {
-    final members = f['team_members'] is List ? ApiClient.list(f['team_members']) : <Map<String, dynamic>>[];
-    if (members.isEmpty) return Text(t('factory_profile.no_team', 'لا يوجد أعضاء فريق'), style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted));
+    final members = f['team_members'] is List
+        ? ApiClient.list(f['team_members'])
+        : <Map<String, dynamic>>[];
+    if (members.isEmpty)
+      return Text(t('factory_profile.no_team', 'لا يوجد أعضاء فريق'),
+          style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted));
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -636,10 +1004,31 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       children: [
         for (final m in members)
           Column(children: [
-            Container(width: 74, height: 74, clipBehavior: Clip.antiAlias, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFFEF8E8)), child: NetImage(url: m['image_url'] as String?, fallback: AppData.tr(m, 'name').isEmpty ? '👤' : String.fromCharCode(AppData.tr(m, 'name').runes.first), width: 74, height: 74)),
+            Container(
+                width: 74,
+                height: 74,
+                clipBehavior: Clip.antiAlias,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: Color(0xFFFEF8E8)),
+                child: NetImage(
+                    url: m['image_url'] as String?,
+                    fallback: AppData.tr(m, 'name').isEmpty
+                        ? '👤'
+                        : String.fromCharCode(
+                            AppData.tr(m, 'name').runes.first),
+                    width: 74,
+                    height: 74)),
             const SizedBox(height: 6),
-            Text(AppData.tr(m, 'name'), maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700)),
-            Text(AppData.tr(m, 'role'), maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 11.5, color: AppColors.muted)),
+            Text(AppData.tr(m, 'name'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.tajawal(
+                    fontSize: 13, fontWeight: FontWeight.w700)),
+            Text(AppData.tr(m, 'role'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.tajawal(
+                    fontSize: 11.5, color: AppColors.muted)),
           ]),
       ],
     );
@@ -647,7 +1036,8 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
 
   Future<void> _open(String url) async {
     final uri = Uri.tryParse(url);
-    if (uri != null && await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (uri != null && await canLaunchUrl(uri))
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   // ───────────────────────── posts ─────────────────────────
@@ -656,33 +1046,69 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
         path: '/users/${f['user_id']}/posts',
         query: const {'per_page': 20},
         emptyKey: 'home.no_posts',
-        builder: (rows) => Column(children: [for (final r in rows) PostCard(post: AppData.postFromJson(r))]),
+        builder: (rows) => Column(children: [
+          for (final r in rows) PostCard(post: AppData.postFromJson(r))
+        ]),
       );
 
   // ───────────────────────── contact ─────────────────────────
 
   Widget _contactTab(Map<String, dynamic> f) {
     final loggedIn = AuthService.i.isLoggedIn;
-    final phones = f['phones'] is List && (f['phones'] as List).isNotEmpty ? (f['phones'] as List).map((e) => '$e').toList() : [if ('${f['phone'] ?? ''}'.isNotEmpty) '${f['phone']}'];
-    final country = f['country'] is Map ? AppData.tr(Map<String, dynamic>.from(f['country'] as Map), 'name') : '';
-    final city = f['city'] is Map ? AppData.tr(Map<String, dynamic>.from(f['city'] as Map), 'name') : '';
+    final phones = f['phones'] is List && (f['phones'] as List).isNotEmpty
+        ? (f['phones'] as List).map((e) => '$e').toList()
+        : [if ('${f['phone'] ?? ''}'.isNotEmpty) '${f['phone']}'];
+    final country = f['country'] is Map
+        ? AppData.tr(Map<String, dynamic>.from(f['country'] as Map), 'name')
+        : '';
+    final city = f['city'] is Map
+        ? AppData.tr(Map<String, dynamic>.from(f['city'] as Map), 'name')
+        : '';
     final address = AppData.tr(f, 'full_address');
-    final location = [address, city, country].where((e) => e.isNotEmpty).join(L10n.i.isRtl ? '، ' : ', ');
+    final location = [address, city, country]
+        .where((e) => e.isNotEmpty)
+        .join(L10n.i.isRtl ? '، ' : ', ');
     final na = t('factory_profile.not_specified', 'غير محدد');
 
-    Widget item(IconData icon, String label, String value, {String? action, VoidCallback? onTap}) => Container(
+    Widget item(IconData icon, String label, String value,
+            {String? action, VoidCallback? onTap}) =>
+        Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.black.withAlpha(10))),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.black.withAlpha(10))),
           child: Row(children: [
-            Container(width: 40, height: 40, decoration: BoxDecoration(color: _light, borderRadius: BorderRadius.circular(10)), child: Icon(icon, size: 20, color: _primary)),
+            Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                    color: _light, borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, size: 20, color: _primary)),
             const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: GoogleFonts.tajawal(fontSize: 12, color: AppColors.muted)),
-              Text(value, style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text)),
-            ])),
-            if (action != null) TextButton(onPressed: onTap, child: Text(action, style: GoogleFonts.tajawal(fontSize: 12.5, fontWeight: FontWeight.w700, color: _primary))),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(label,
+                      style: GoogleFonts.tajawal(
+                          fontSize: 12, color: AppColors.muted)),
+                  Text(value,
+                      style: GoogleFonts.tajawal(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text)),
+                ])),
+            if (action != null)
+              TextButton(
+                  onPressed: onTap,
+                  child: Text(action,
+                      style: GoogleFonts.tajawal(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: _primary))),
           ]),
         );
 
@@ -699,21 +1125,51 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(children: [
         if ('${f['email'] ?? ''}'.isNotEmpty)
-          item(Icons.email_outlined, t('factory_profile.email', 'البريد الإلكتروني'), loggedIn ? '${f['email']}' : '••••••••',
-              action: loggedIn ? t('factory_profile.send_email', 'إرسال بريد') : t('factory_profile.login_to_email', 'سجّل الدخول'), onTap: () => gate(() => _open('mailto:${f['email']}'))),
+          item(
+              Icons.email_outlined,
+              t('factory_profile.email', 'البريد الإلكتروني'),
+              loggedIn ? '${f['email']}' : '••••••••',
+              action: loggedIn
+                  ? t('factory_profile.send_email', 'إرسال بريد')
+                  : t('factory_profile.login_to_email', 'سجّل الدخول'),
+              onTap: () => gate(() => _open('mailto:${f['email']}'))),
         for (final p in phones)
-          item(Icons.phone_outlined, t('factory_profile.contact_number', 'رقم التواصل'), loggedIn ? p : '${p.substring(0, min(4, p.length))} ****',
-              action: loggedIn ? t('factory_profile.call_now', 'اتصل الآن') : t('factory_profile.login_to_call', 'سجّل الدخول'), onTap: () => gate(() => _open('tel:$p'))),
-        if (f['founded_year'] != null) item(Icons.calendar_today_outlined, t('factory_profile.founded_year', 'سنة التأسيس'), '${f['founded_year']}'),
-        item(Icons.access_time, t('factory_profile.working_hours', 'ساعات العمل'), '${f['working_hours'] ?? na}'),
-        item(Icons.location_on_outlined, t('factory_profile.location', 'الموقع'), location.isEmpty ? na : location),
+          item(
+              Icons.phone_outlined,
+              t('factory_profile.contact_number', 'رقم التواصل'),
+              loggedIn ? p : '${p.substring(0, min(4, p.length))} ****',
+              action: loggedIn
+                  ? t('factory_profile.call_now', 'اتصل الآن')
+                  : t('factory_profile.login_to_call', 'سجّل الدخول'),
+              onTap: () => gate(() => _open('tel:$p'))),
+        if (f['founded_year'] != null)
+          item(
+              Icons.calendar_today_outlined,
+              t('factory_profile.founded_year', 'سنة التأسيس'),
+              '${f['founded_year']}'),
+        item(
+            Icons.access_time,
+            t('factory_profile.working_hours', 'ساعات العمل'),
+            '${f['working_hours'] ?? na}'),
+        item(
+            Icons.location_on_outlined,
+            t('factory_profile.location', 'الموقع'),
+            location.isEmpty ? na : location),
         const SizedBox(height: 6),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () => _QuoteSheet.show(context, f, _primary),
-            style: ElevatedButton.styleFrom(backgroundColor: _primary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: Text(t('factory_profile.request_quote', 'طلب عرض سعر'), style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: _primary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12))),
+            child: Text(t('factory_profile.request_quote', 'طلب عرض سعر'),
+                style: GoogleFonts.tajawal(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white)),
           ),
         ),
       ]),
@@ -739,15 +1195,25 @@ class _FactoryCoverState extends State<_FactoryCover> {
     super.initState();
     _url = widget.fallback;
     AppData.fetchFactoryImages(widget.factoryId).then((imgs) {
-      final urls = imgs.map((e) => '${e['file_url'] ?? ''}').where((u) => u.isNotEmpty).toList();
-      if (mounted && urls.isNotEmpty) setState(() => _url = urls[Random().nextInt(urls.length)]);
+      final urls = imgs
+          .map((e) => '${e['file_url'] ?? ''}')
+          .where((u) => u.isNotEmpty)
+          .toList();
+      if (mounted && urls.isNotEmpty)
+        setState(() => _url = urls[Random().nextInt(urls.length)]);
     }).catchError((_) {});
   }
 
   @override
   Widget build(BuildContext context) {
     if (_url == null || _url!.isEmpty) return const SizedBox.shrink();
-    return ClipRRect(borderRadius: BorderRadius.circular(12), child: SizedBox(height: 200, width: double.infinity, child: NetImage(url: _url, fallback: '', width: double.infinity, height: 200)));
+    return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+            height: 200,
+            width: double.infinity,
+            child: NetImage(
+                url: _url, fallback: '', width: double.infinity, height: 200)));
   }
 }
 
@@ -757,15 +1223,20 @@ class _ListLoader extends StatefulWidget {
   final Map<String, dynamic>? query;
   final Widget Function(List<Map<String, dynamic>>) builder;
   final String emptyKey;
-  const _ListLoader({required this.path, required this.builder, required this.emptyKey, this.query});
+  const _ListLoader(
+      {required this.path,
+      required this.builder,
+      required this.emptyKey,
+      this.query});
 
   @override
   State<_ListLoader> createState() => _ListLoaderState();
 }
 
 class _ListLoaderState extends State<_ListLoader> {
-  late final Future<List<Map<String, dynamic>>> _future =
-      ApiClient.i.get(widget.path, query: widget.query ?? {'per_page': 50}).then((r) => ApiClient.list(r['data']));
+  late final Future<List<Map<String, dynamic>>> _future = ApiClient.i
+      .get(widget.path, query: widget.query ?? {'per_page': 50})
+      .then((r) => ApiClient.list(r['data']));
 
   @override
   Widget build(BuildContext context) {
@@ -773,11 +1244,24 @@ class _ListLoaderState extends State<_ListLoader> {
       future: _future,
       builder: (context, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const Padding(padding: EdgeInsets.all(20), child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold))));
+          return const Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(
+                  child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.gold))));
         }
         final rows = snap.data ?? [];
         if (rows.isEmpty) {
-          return Padding(padding: const EdgeInsets.all(16), child: Center(child: Text(t(widget.emptyKey, '—'), textAlign: TextAlign.center, style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted))));
+          return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                  child: Text(t(widget.emptyKey, '—'),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.tajawal(
+                          fontSize: 13, color: AppColors.muted))));
         }
         return widget.builder(rows);
       },
@@ -792,28 +1276,52 @@ class _Catalogs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = f['catalogs'] is List ? ApiClient.list(f['catalogs']) : <Map<String, dynamic>>[];
-    if (list.isEmpty) return Padding(padding: const EdgeInsets.all(16), child: Center(child: Text(t('factory_profile.no_catalogs', 'لا توجد كتالوجات'), style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted))));
+    final list = f['catalogs'] is List
+        ? ApiClient.list(f['catalogs'])
+        : <Map<String, dynamic>>[];
+    if (list.isEmpty)
+      return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+              child: Text(t('factory_profile.no_catalogs', 'لا توجد كتالوجات'),
+                  style: GoogleFonts.tajawal(
+                      fontSize: 13, color: AppColors.muted))));
     return Column(
       children: [
         for (final c in list)
           Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+            decoration: BoxDecoration(
+                color: const Color(0xFFFAFAFA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border)),
             child: Row(children: [
               Icon(Icons.picture_as_pdf_outlined, color: primary, size: 30),
               const SizedBox(width: 10),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(AppData.tr(c, 'name'), style: GoogleFonts.tajawal(fontSize: 13.5, fontWeight: FontWeight.w700)),
-                Text(t('factory_profile.catalog_description', ''), maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 11.5, color: AppColors.muted)),
-              ])),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(AppData.tr(c, 'name'),
+                        style: GoogleFonts.tajawal(
+                            fontSize: 13.5, fontWeight: FontWeight.w700)),
+                    Text(t('factory_profile.catalog_description', ''),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.tajawal(
+                            fontSize: 11.5, color: AppColors.muted)),
+                  ])),
               TextButton(
                 onPressed: () async {
-                  final uri = Uri.parse('${ApiClient.host}/api/factories/${f['id']}/catalogs/${c['id']}/file');
-                  if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  final uri = Uri.parse(
+                      '${ApiClient.host}/api/factories/${f['id']}/catalogs/${c['id']}/file');
+                  if (await canLaunchUrl(uri))
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
                 },
-                child: Text(t('factory_profile.download_catalog', 'تحميل'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w700, color: primary)),
+                child: Text(t('factory_profile.download_catalog', 'تحميل'),
+                    style: GoogleFonts.tajawal(
+                        fontWeight: FontWeight.w700, color: primary)),
               ),
             ]),
           ),
@@ -828,12 +1336,14 @@ class _QuoteSheet extends StatefulWidget {
   final Color primary;
   const _QuoteSheet({required this.f, required this.primary});
 
-  static void show(BuildContext context, Map<String, dynamic> f, Color primary) {
+  static void show(
+      BuildContext context, Map<String, dynamic> f, Color primary) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => _QuoteSheet(f: f, primary: primary),
     );
   }
@@ -857,24 +1367,31 @@ class _QuoteSheetState extends State<_QuoteSheet> {
   void initState() {
     super.initState();
     if (_featured) {
-      ApiClient.i.get('/factories/${widget.f['id']}/products', query: {'per_page': 100}).then((r) {
+      ApiClient.i.get('/factories/${widget.f['id']}/products',
+          query: {'per_page': 100}).then((r) {
         if (mounted) setState(() => _all = ApiClient.list(r['data']));
       }).catchError((_) {});
     }
   }
 
   Future<void> _send() async {
-    if (_name.text.trim().isEmpty || _email.text.trim().isEmpty || _phone.text.trim().isEmpty || _details.text.trim().isEmpty) {
-      showAppToast(context, '⚠️ ${t('quote.fill_required', 'يرجى ملء جميع الحقول')}');
+    if (_name.text.trim().isEmpty ||
+        _email.text.trim().isEmpty ||
+        _phone.text.trim().isEmpty ||
+        _details.text.trim().isEmpty) {
+      showAppToast(
+          context, '⚠️ ${t('quote.fill_required', 'يرجى ملء جميع الحقول')}');
       return;
     }
     if (_featured && _products.isEmpty && _all.isNotEmpty) {
-      showAppToast(context, '⚠️ ${t('quote.select_product', 'اختر منتجاً واحداً على الأقل')}');
+      showAppToast(context,
+          '⚠️ ${t('quote.select_product', 'اختر منتجاً واحداً على الأقل')}');
       return;
     }
     setState(() => _sending = true);
     try {
-      await ApiClient.i.post('/factories/${widget.f['id']}/quote-requests', body: {
+      await ApiClient.i
+          .post('/factories/${widget.f['id']}/quote-requests', body: {
         'name': _name.text.trim(),
         'email': _email.text.trim(),
         'phone': _phone.text.trim(),
@@ -896,52 +1413,94 @@ class _QuoteSheetState extends State<_QuoteSheet> {
         hintStyle: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted),
         filled: true,
         fillColor: const Color(0xFFF7F8FA),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: widget.primary)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AppColors.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: widget.primary)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       );
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(t('factory_profile.request_quote', 'طلب عرض سعر'), style: GoogleFonts.tajawal(fontSize: 17, fontWeight: FontWeight.w700)),
+              Text(t('factory_profile.request_quote', 'طلب عرض سعر'),
+                  style: GoogleFonts.tajawal(
+                      fontSize: 17, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              TextField(controller: _name, decoration: _dec(t('quote.name', 'الاسم'))),
+              TextField(
+                  controller: _name,
+                  decoration: _dec(t('quote.name', 'الاسم'))),
               const SizedBox(height: 10),
-              TextField(controller: _email, keyboardType: TextInputType.emailAddress, textDirection: TextDirection.ltr, decoration: _dec(t('quote.email', 'البريد الإلكتروني'))),
+              TextField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  textDirection: TextDirection.ltr,
+                  decoration: _dec(t('quote.email', 'البريد الإلكتروني'))),
               const SizedBox(height: 10),
-              TextField(controller: _phone, keyboardType: TextInputType.phone, textDirection: TextDirection.ltr, decoration: _dec(t('quote.phone', 'رقم الهاتف'))),
+              TextField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  textDirection: TextDirection.ltr,
+                  decoration: _dec(t('quote.phone', 'رقم الهاتف'))),
               if (_all.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                Text(t('factory_tabs.products', 'المنتجات'), style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(t('factory_tabs.products', 'المنتجات'),
+                    style: GoogleFonts.tajawal(
+                        fontSize: 13, fontWeight: FontWeight.w700)),
                 Wrap(
                   spacing: 6,
                   children: [
                     for (final p in _all)
                       FilterChip(
-                        label: Text(AppData.tr(p, 'name'), style: GoogleFonts.tajawal(fontSize: 12)),
+                        label: Text(AppData.tr(p, 'name'),
+                            style: GoogleFonts.tajawal(fontSize: 12)),
                         selected: _products.contains(p['id']),
                         selectedColor: widget.primary.withAlpha(60),
-                        onSelected: (v) => setState(() => v ? _products.add(p['id'] as int) : _products.remove(p['id'])),
+                        onSelected: (v) => setState(() => v
+                            ? _products.add(p['id'] as int)
+                            : _products.remove(p['id'])),
                       ),
                   ],
                 ),
               ],
               const SizedBox(height: 10),
-              TextField(controller: _details, maxLines: 4, decoration: _dec(t('quote.details', 'تفاصيل الطلب'))),
+              TextField(
+                  controller: _details,
+                  maxLines: 4,
+                  decoration: _dec(t('quote.details', 'تفاصيل الطلب'))),
               const SizedBox(height: 14),
               ElevatedButton(
                 onPressed: _sending ? null : _send,
-                style: ElevatedButton.styleFrom(backgroundColor: widget.primary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: _sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(t('quote.send', 'إرسال'), style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12))),
+                child: _sending
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : Text(t('quote.send', 'إرسال'),
+                        style: GoogleFonts.tajawal(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
               ),
             ],
           ),
