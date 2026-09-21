@@ -343,7 +343,8 @@ class _DashFormState extends State<DashForm> {
       default:
         return TextField(
           controller: _c[f.key],
-          maxLines: f.type == FT.multiline ? (f.key == 'about' ? 9 : 4) : 1,
+          minLines: f.type == FT.multiline ? (f.key == 'about' ? 8 : 3) : 1,
+          maxLines: f.type == FT.multiline ? (f.key == 'about' ? 14 : 6) : 1,
           maxLength: f.maxLength,
           keyboardType: f.type == FT.number ? TextInputType.number : (f.type == FT.email ? TextInputType.emailAddress : (f.type == FT.url ? TextInputType.url : null)),
           textDirection: f.type == FT.email || f.type == FT.url ? TextDirection.ltr : null,

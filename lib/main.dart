@@ -242,7 +242,11 @@ class _MainShellState extends State<MainShell> {
       backgroundColor: AppColors.bg,
       body: Column(
         children: [
-          const AppHeader(),
+          // While the keyboard is open the tall header would leave almost no room: collapse it to the yellow strip.
+          if (MediaQuery.of(context).viewInsets.bottom > 0)
+            Container(height: MediaQuery.of(context).padding.top + 6, color: AppColors.gold)
+          else
+            const AppHeader(),
           // The header and bottom bar already cover the system insets: pages inside must not add them again.
           Expanded(child: MediaQuery.removePadding(context: context, removeTop: true, removeBottom: true, child: child)),
         ],
