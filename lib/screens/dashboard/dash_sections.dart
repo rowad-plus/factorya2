@@ -12,6 +12,7 @@ import '../../widgets/net_image.dart';
 import '../../widgets/shell_widgets.dart';
 import '../opportunities/opportunities_screen.dart' show tri;
 import '../../widgets/chat_ad.dart';
+import '../chat/chat_screen.dart' show ChatScreen;
 import 'dash_kit.dart';
 import 'dash_gates.dart';
 import 'dash_media.dart';
@@ -628,7 +629,7 @@ class _DashChatSectionState extends State<DashChatBody> {
                             final n = (_unread[uid] as num?)?.toInt() ?? 0;
                             return GestureDetector(
                               onTap: () async {
-                                await Navigator.push(context, MaterialPageRoute(builder: (_) => DashThread(userId: uid, name: _s(o['name']))));
+                                await Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(factoryId: '', threadUserId: uid, name: _s(o['name']), avatar: _s(o['name']), color: AppColors.gold, logo: AppData.userImageUrl(o))));
                                 _load();
                               },
                               child: Container(

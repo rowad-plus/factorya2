@@ -18,6 +18,7 @@ import '../../widgets/common_widgets.dart';
 import '../../widgets/chat_ad.dart';
 import '../../widgets/net_image.dart';
 import '../auth/login_modal.dart';
+import '../dashboard/dash_kit.dart' show dp;
 import '../opportunities/opportunities_screen.dart' show tri;
 
 enum _Status { sent, sending, failed }
@@ -59,7 +60,10 @@ class ChatScreen extends StatefulWidget {
   final Color color;
   final String? logo;
 
-  const ChatScreen({super.key, required this.factoryId, required this.name, required this.avatar, required this.color, this.logo});
+  /// Factory-owner mode: the visitor this thread is with (uses the dashboard chat endpoints).
+  final String? threadUserId;
+
+  const ChatScreen({super.key, required this.factoryId, required this.name, required this.avatar, required this.color, this.logo, this.threadUserId});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -87,7 +91,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Timer? _recTicker;
   DateTime? _recStart;
 
+  bool get _asOwner => widget.threadUserId != null;
   String get _path => '/factories/${widget.factoryId}/chat';
+  String get _getPath => _asOwner ? dp('/chat/${widget.threadUserId}') : '$_path/messages';
+  String get _postPath => _asOwner ? dp('/chat/${widget.threadUserId}/messages') : '$_path/messages';
 
   @override
   void initState() {
@@ -98,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final has = _ctrl.text.trim().isNotEmpty;
       if (has != _hasText) setState(() => _hasText = has);
     });
-    if (AuthService.i.isLoggedIn && '${AuthService.i.user?['account_type']}' != 'factory') {
+    if (AuthService.i.isLoggedIn && (_asOwner || '${AuthService.i.user?['account_type']}' != 'factory')) {
       _load(initial: true);
       _startPolling();
     } else {
@@ -153,7 +160,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<Map<String, dynamic>> _fetchPage(int page) => ApiClient.i.get('$_path/messages', query: {'per_page': _perPage, 'page': page});
+  Future<Map<String, dynamic>> _fetchPage(int page) => ApiClient.i.get(_getPath, query: {'per_page': _perPage, 'page': page});
 
   int _metaLast(Map<String, dynamic> res) {
     final meta = res['meta'];
@@ -211,7 +218,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       });
       final after = _msgs.where((m) => m.id != null).length;
       if (initial || (after != before && (nearBottom || !incoming))) _scrollToEnd(jump: initial);
-      if (rows.any((m) => m['sender_id'] != me && m['is_read'] == false)) {
+      if (!_asOwner && rows.any((m) => m['sender_id'] != me && m['is_read'] == false)) {
         ApiClient.i.patch('$_path/messages/read').then((_) => AppData.loadUserData()).catchError((_) => <String, dynamic>{});
       }
     } on ApiException catch (e) {
@@ -292,8 +299,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final files = <MapEntry<String, http.MultipartFile>>[];
       if (s.bytes != null) files.add(MapEntry('attachment', http.MultipartFile.fromBytes('attachment', s.bytes!, filename: s.filename ?? 'file')));
       final res = s.bytes == null && s.type == 'text'
-          ? await ApiClient.i.post('$_path/messages', body: {'message': s.text})
-          : await ApiClient.i.postMultipart('$_path/messages', fields: fields, files: files);
+          ? await ApiClient.i.post(_postPath, body: {'message': s.text})
+          : await ApiClient.i.postMultipart(_postPath, fields: fields, files: files);
       final data = res['data'];
       if (!mounted) return;
       setState(() {
@@ -457,7 +464,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // ───────────────────────── UI ─────────────────────────
 
   /// The server only lets visitor ("user") accounts start chats with a factory.
-  bool get _factoryAccount => AuthService.i.isLoggedIn && '${AuthService.i.user?['account_type']}' == 'factory';
+  bool get _factoryAccount => !_asOwner && AuthService.i.isLoggedIn && '${AuthService.i.user?['account_type']}' == 'factory';
 
   String _clock(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
@@ -705,7 +712,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-          if (!_factoryAccount) ChatAd(factoryId: widget.factoryId),
+          if (_asOwner) const ChatAd(forFactory: true) else if (!_factoryAccount) ChatAd(factoryId: widget.factoryId),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
