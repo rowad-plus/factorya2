@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -95,7 +96,7 @@ class _ChatAdState extends State<ChatAd> {
         clipBehavior: Clip.antiAlias,
         // width: 100%, height: auto — the banner keeps its own aspect ratio.
         child: Stack(children: [
-          Image.network(url, width: double.infinity, fit: BoxFit.fitWidth, gaplessPlayback: true, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+          CachedNetworkImage(imageUrl: url, width: double.infinity, fit: BoxFit.fitWidth, fadeInDuration: const Duration(milliseconds: 150), placeholder: (_, __) => const AspectRatio(aspectRatio: 4, child: ColoredBox(color: Color(0xFFEEEEEE))), errorWidget: (_, __, ___) => const SizedBox.shrink()),
           PositionedDirectional(
             top: 4,
             end: 4,

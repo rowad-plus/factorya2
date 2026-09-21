@@ -1,3 +1,4 @@
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/factory_model.dart';
@@ -62,8 +63,29 @@ class AppData {
     revision.value++;
   }
 
+  /// Downloads banner images into the disk cache in the background so they show instantly later.
+  static void _warm(List<Map<String, dynamic>> banners) {
+    for (final b in banners) {
+      for (final k in const ['mobile_image_url', 'website_image_url']) {
+        final v = b[k];
+        if (v is String && v.startsWith('http')) {
+          DefaultCacheManager().downloadFile(v).then((_) {}, onError: (_) {});
+          break;
+        }
+      }
+    }
+  }
+
+  /// Fetches (and warms) the banners of the main locations right after start-up.
+  static void prefetchBanners() {
+    for (final l in const ['header', 'homepage', 'timeline', 'gates', 'categories', 'sponsors', 'factories', 'products', 'chat']) {
+      fetchBanners(l);
+    }
+  }
+
   static Future<void> load() async {
     error = null;
+    prefetchBanners();
     try {
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getInt(_kCountry);
@@ -275,7 +297,9 @@ class AppData {
     try {
       final res = await _api.get('/banners', query: {'location': location});
       final data = res['data'];
-      return _bannerCache[location] = data is Map ? ApiClient.list(data['banners']) : [];
+      final list = data is Map ? ApiClient.list(data['banners']) : <Map<String, dynamic>>[];
+      _warm(list);
+      return _bannerCache[location] = list;
     } catch (_) {
       return [];
     }

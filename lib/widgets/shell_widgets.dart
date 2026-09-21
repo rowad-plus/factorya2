@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -318,8 +319,21 @@ class _HeaderBannerState extends State<HeaderBanner> {
       _index = 0;
     });
     if (list.length > 1) {
-      _timer = Timer.periodic(const Duration(seconds: 6), (_) {
-        if (mounted) setState(() => _index = (_index + 1) % _items.length);
+      _timer = Timer.periodic(const Duration(seconds: 6), (_) async {
+        if (!mounted) return;
+        final next = (_index + 1) % _items.length;
+        // Switch only once the next banner is in the cache, so the slot never goes blank while it downloads.
+        final b = _items[next];
+        for (final k in const ['mobile_image_url', 'website_image_url']) {
+          final v = b[k];
+          if (v is String && v.isNotEmpty) {
+            try {
+              await precacheImage(CachedNetworkImageProvider(v), context);
+            } catch (_) {}
+            break;
+          }
+        }
+        if (mounted) setState(() => _index = next);
       });
     }
   }
@@ -360,13 +374,13 @@ class _HeaderBannerState extends State<HeaderBanner> {
           child: ColoredBox(
             key: ValueKey(url),
             color: const Color(0xFF3D3A35),
-            child: Image.network(
-              url,
+            child: CachedNetworkImage(
+              imageUrl: url,
               fit: BoxFit.cover,
-              gaplessPlayback: true,
               width: double.infinity,
               height: double.infinity,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              fadeInDuration: const Duration(milliseconds: 150),
+              errorWidget: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),
         ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/app_data.dart';
@@ -141,7 +142,7 @@ class PromoBanner extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-        child: Image.network(url, width: double.infinity, fit: BoxFit.fitWidth, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+        child: CachedNetworkImage(imageUrl: url, width: double.infinity, fit: BoxFit.fitWidth, fadeInDuration: const Duration(milliseconds: 150), placeholder: (_, __) => const AspectRatio(aspectRatio: 3, child: ColoredBox(color: Color(0xFFEEEEEE))), errorWidget: (_, __, ___) => const SizedBox.shrink()),
       ),
     );
   }
