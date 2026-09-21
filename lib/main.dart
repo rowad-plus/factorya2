@@ -243,7 +243,8 @@ class _MainShellState extends State<MainShell> {
       body: Column(
         children: [
           const AppHeader(),
-          Expanded(child: child),
+          // The header and bottom bar already cover the system insets: pages inside must not add them again.
+          Expanded(child: MediaQuery.removePadding(context: context, removeTop: true, removeBottom: true, child: child)),
         ],
       ),
       bottomNavigationBar: AppBottomNav(
