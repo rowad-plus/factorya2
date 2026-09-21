@@ -16,7 +16,26 @@ class AuthService extends ChangeNotifier {
   String get phone => (user?['phone_number'] as String?) ?? '';
   int? get userId => user?['id'] as int?;
   int? get factoryId => user?['factory_id'] as int?;
-  bool get hasFactory => user?['has_factory'] == true;
+  bool get isFactoryAccount => user?['account_type'] == 'factory';
+  // `/profile` does not include has_factory / factory_id, so a factory account counts as having one.
+  bool get hasFactory => user?['has_factory'] == true || isFactoryAccount || factoryId != null;
+
+  /// Where "profile" leads: a factory account opens its factory page, anyone else the user profile.
+  String get profileRoute => factoryId != null ? '/factory/$factoryId' : '/profile';
+
+  /// Looks up the id of the signed-in factory account's factory (the API user object does not carry it).
+  Future<void> _resolveFactory() async {
+    if (user == null || !isFactoryAccount || factoryId != null) return;
+    try {
+      final res = await ApiClient.i.get('/factory-dashboard/my-factory');
+      final id = res['data'] is Map ? (res['data'] as Map)['id'] : null;
+      if (id is int) {
+        user!['factory_id'] = id;
+        user!['has_factory'] = true;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
 
   /// Restores a saved session; drops it if the server rejects the token.
   Future<void> restore() async {
@@ -28,6 +47,7 @@ class AuthService extends ChangeNotifier {
       ApiClient.i.token = t;
       final res = await ApiClient.i.get('/profile');
       user = _userFrom(res['data']);
+      await _resolveFactory();
     } on ApiException catch (e) {
       if (e.isUnauthorized) await _clear();
     } catch (_) {}
@@ -87,6 +107,7 @@ class AuthService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kToken, token);
     notifyListeners();
+    _resolveFactory();
   }
 
   Future<void> logout() async {

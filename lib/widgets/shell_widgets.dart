@@ -236,7 +236,7 @@ class _UserButton extends StatelessWidget {
             rule(),
             item('/jobs', Icons.work_outline, t('nav.jobs', 'الوظائف')),
             rule(),
-            item('/profile', Icons.person_outline,
+            item(auth.profileRoute, Icons.person_outline,
                 t('nav.profile', 'البروفايل')),
             rule(),
             item('logout', Icons.logout, t('nav.logout', 'تسجيل الخروج'),
@@ -550,7 +550,7 @@ class MoreSheet {
                           style: GoogleFonts.tajawal(fontSize: 14)),
                       onTap: () {
                         Navigator.pop(sheet);
-                        context.push('/profile');
+                        context.push(AuthService.i.profileRoute);
                       }),
                 ] else
                   ListTile(
