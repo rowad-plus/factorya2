@@ -93,21 +93,19 @@ class _ChatAdState extends State<ChatAd> {
       child: Container(
         decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.border))),
         clipBehavior: Clip.antiAlias,
-        child: AspectRatio(
-          aspectRatio: 4,
-          child: Stack(fit: StackFit.expand, children: [
-            Image.network(url, fit: BoxFit.cover, gaplessPlayback: true, errorBuilder: (_, __, ___) => const ColoredBox(color: Color(0xFFEEEEEE))),
-            PositionedDirectional(
-              top: 4,
-              end: 4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(6)),
-                child: Text(tri('إعلان', 'Reklam', 'Ad'), style: GoogleFonts.tajawal(fontSize: 10, color: Colors.white)),
-              ),
+        // width: 100%, height: auto — the banner keeps its own aspect ratio.
+        child: Stack(children: [
+          Image.network(url, width: double.infinity, fit: BoxFit.fitWidth, gaplessPlayback: true, errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+          PositionedDirectional(
+            top: 4,
+            end: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(6)),
+              child: Text(tri('إعلان', 'Reklam', 'Ad'), style: GoogleFonts.tajawal(fontSize: 10, color: Colors.white)),
             ),
-          ]),
-        ),
+          ),
+        ]),
       ),
     );
   }
