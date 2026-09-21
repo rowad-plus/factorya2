@@ -135,7 +135,7 @@ class _GateScreenState extends State<GateScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 const HeaderBanner(),
-                if (_banner != null) Padding(padding: const EdgeInsets.only(top: 8), child: PromoBanner(banner: _banner!)),
+                if (_banner != null) Padding(padding: const EdgeInsets.only(top: 8), child: PromoBanner(banner: _banner!, fullWidth: true)),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                   child: SiteSearchBar(

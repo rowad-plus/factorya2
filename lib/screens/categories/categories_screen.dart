@@ -70,7 +70,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                   ],
                 ),
-              if (_banners.isNotEmpty) PromoBanner(banner: _banners[0]),
+              if (_banners.isNotEmpty) PromoBanner(banner: _banners[0], fullWidth: true),
               if (AppData.featured.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 20),
@@ -96,7 +96,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     ],
                   ),
                 ),
-              if (_banners.length > 1) PromoBanner(banner: _banners[1]),
+              if (_banners.length > 1) PromoBanner(banner: _banners[1], fullWidth: true),
               if (AppData.opportunities.isNotEmpty) ...[
                 SmallHeader(title: t('gates.opportunities', 'الفرص'), subTitle: t('gates.opportunities_subtitle'), bgColor: AppColors.gold3),
                 CardsGrid(

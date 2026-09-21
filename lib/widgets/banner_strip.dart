@@ -119,7 +119,9 @@ class _BannerStripState extends State<BannerStrip> {
 /// One banner image (mobile version), full width, tappable through its `link_url`.
 class PromoBanner extends StatelessWidget {
   final Map<String, dynamic> banner;
-  const PromoBanner({super.key, required this.banner});
+  /// width: 100% — edge to edge, no side margin or rounded corners.
+  final bool fullWidth;
+  const PromoBanner({super.key, required this.banner, this.fullWidth = false});
 
   @override
   Widget build(BuildContext context) {
@@ -139,9 +141,9 @@ class PromoBanner extends StatelessWidget {
         if (uri != null && await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        margin: fullWidth ? const EdgeInsets.symmetric(vertical: 8) : const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
         clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(fullWidth ? 0 : 16)),
         child: CachedNetworkImage(imageUrl: url, width: double.infinity, fit: BoxFit.fitWidth, fadeInDuration: const Duration(milliseconds: 150), placeholder: (_, __) => const AspectRatio(aspectRatio: 3, child: ColoredBox(color: Color(0xFFEEEEEE))), errorWidget: (_, __, ___) => const SizedBox.shrink()),
       ),
     );
