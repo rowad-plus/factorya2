@@ -19,7 +19,7 @@ class CreateOpportunityScreen extends StatefulWidget {
 class _CreateOpportunityScreenState extends State<CreateOpportunityScreen> {
   final _nameCtrl = TextEditingController(text: AuthService.i.name);
   final _phoneCtrl = TextEditingController(text: AuthService.i.phone);
-  final _emailCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController(text: AuthService.i.email);
   final _messageCtrl = TextEditingController();
   late String? _oppId = widget.preselected?.id ?? (AppData.opportunities.isNotEmpty ? AppData.opportunities.first.id : null);
   bool _sending = false;

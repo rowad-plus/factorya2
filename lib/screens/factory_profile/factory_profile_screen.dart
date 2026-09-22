@@ -1003,7 +1003,19 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
         ],
       );
 
-  Widget _partners(List<Map<String, dynamic>> rows) => GridView.count(
+  Widget _partners(List<Map<String, dynamic>> rows) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: OutlinedButton.icon(
+              onPressed: () => _JoinClientSheet.show(context, _id, _primary),
+              icon: Icon(Icons.person_add_alt_1_outlined, size: 16, color: _primary),
+              label: Text(t('factory_profile.join_as_client', 'انضم كعميل'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w700, color: _primary)),
+              style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), side: BorderSide(color: _primary)),
+            ),
+          ),
+          GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
@@ -1033,6 +1045,8 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                   style: GoogleFonts.tajawal(
                       fontSize: 11.5, fontWeight: FontWeight.w600)),
             ]),
+        ],
+          ),
         ],
       );
 
@@ -1472,7 +1486,7 @@ class _QuoteSheet extends StatefulWidget {
 
 class _QuoteSheetState extends State<_QuoteSheet> {
   final _name = TextEditingController(text: AuthService.i.name);
-  final _email = TextEditingController();
+  final _email = TextEditingController(text: AuthService.i.email);
   final _phone = TextEditingController(text: AuthService.i.phone);
   final _details = TextEditingController();
   final Set<int> _products = {};
@@ -1619,6 +1633,133 @@ class _QuoteSheetState extends State<_QuoteSheet> {
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Join as client" (`customer-join-requests`): same fields as the quote sheet, pre-filled from
+/// the signed-in user's own profile — name, email and phone all remain editable.
+class _JoinClientSheet extends StatefulWidget {
+  final String factoryId;
+  final Color primary;
+  const _JoinClientSheet({required this.factoryId, required this.primary});
+
+  static void show(BuildContext context, String factoryId, Color primary) {
+    if (!AuthService.i.isLoggedIn) {
+      LoginModal.show(context);
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => _JoinClientSheet(factoryId: factoryId, primary: primary),
+    );
+  }
+
+  @override
+  State<_JoinClientSheet> createState() => _JoinClientSheetState();
+}
+
+class _JoinClientSheetState extends State<_JoinClientSheet> {
+  final _name = TextEditingController(text: AuthService.i.name);
+  final _email = TextEditingController(text: AuthService.i.email);
+  late final _phone = TextEditingController(text: _localPhone());
+  final _message = TextEditingController();
+  bool _sending = false;
+
+  /// The user's saved phone is `+<dial><number>`; the form shows just the local number,
+  /// next to the (editable) country dial code, matching how the site splits the two.
+  String _localPhone() {
+    final full = AuthService.i.phone;
+    final dial = '${AppData.country?['phone_code'] ?? ''}';
+    return full.startsWith(dial) ? full.substring(dial.length) : full.replaceFirst('+', '');
+  }
+
+  String get _dial => '${AppData.country?['phone_code'] ?? '+966'}';
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _phone.dispose();
+    _message.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_name.text.trim().isEmpty || _email.text.trim().isEmpty || _phone.text.trim().isEmpty || _message.text.trim().isEmpty) {
+      showAppToast(context, '⚠️ ${t('quote.fill_required', 'يرجى ملء جميع الحقول')}');
+      return;
+    }
+    setState(() => _sending = true);
+    try {
+      await ApiClient.i.post('/factories/${widget.factoryId}/customer-join-requests', body: {
+        'name': _name.text.trim(),
+        'email': _email.text.trim(),
+        'phone_country_code': _dial,
+        'phone': _phone.text.trim(),
+        'message': _message.text.trim(),
+      });
+      if (!mounted) return;
+      Navigator.pop(context);
+      showAppToast(context, '✅ ${t('factory_profile.join_request_sent', 'تم إرسال طلبك بنجاح')}');
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, '⚠️ ${e.message}');
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  InputDecoration _dec(String hint, {String? prefix}) => InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted),
+        prefixText: prefix,
+        filled: true,
+        fillColor: const Color(0xFFF7F8FA),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: widget.primary)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(t('factory_profile.join_as_client', 'انضم كعميل'), style: GoogleFonts.tajawal(fontSize: 17, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text(
+                t('factory_profile.join_as_client_hint', 'بياناتك معبّأة من حسابك، ويمكنك تعديلها قبل الإرسال.'),
+                style: GoogleFonts.tajawal(fontSize: 12, color: AppColors.muted),
+              ),
+              const SizedBox(height: 14),
+              TextField(controller: _name, style: GoogleFonts.tajawal(fontSize: 13), decoration: _dec(t('quote.name', 'الاسم'))),
+              const SizedBox(height: 10),
+              TextField(controller: _email, textDirection: TextDirection.ltr, style: GoogleFonts.tajawal(fontSize: 13), decoration: _dec(t('quote.email', 'البريد الإلكتروني'))),
+              const SizedBox(height: 10),
+              TextField(controller: _phone, textDirection: TextDirection.ltr, keyboardType: TextInputType.phone, style: GoogleFonts.tajawal(fontSize: 13), decoration: _dec(t('quote.phone', 'رقم الهاتف'), prefix: '$_dial ')),
+              const SizedBox(height: 10),
+              TextField(controller: _message, maxLines: 4, style: GoogleFonts.tajawal(fontSize: 13), decoration: _dec(t('factory_profile.join_message_hint', 'أخبرنا عن نشاطك ولماذا تريد الانضمام كعميل...'))),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _sending ? null : _send,
+                style: ElevatedButton.styleFrom(backgroundColor: widget.primary, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: _sending
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(t('quote.send', 'إرسال الطلب'), style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)),
               ),
             ],
           ),

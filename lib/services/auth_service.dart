@@ -14,6 +14,7 @@ class AuthService extends ChangeNotifier {
   bool get isLoggedIn => ApiClient.i.token != null && user != null;
   String get name => (user?['name'] as String?) ?? '';
   String get phone => (user?['phone_number'] as String?) ?? '';
+  String get email => (user?['email'] as String?) ?? '';
   int? get userId => user?['id'] as int?;
   int? get factoryId => user?['factory_id'] as int?;
   bool get isFactoryAccount => user?['account_type'] == 'factory';
