@@ -8,6 +8,7 @@ import '../../services/api_client.dart';
 import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/rich_text_field.dart';
 import '../../widgets/net_image.dart';
 import '../../widgets/shell_widgets.dart';
 
@@ -68,7 +69,7 @@ class DashPage extends StatelessWidget {
       );
 }
 
-enum FT { text, multiline, number, email, url, date, select, country, image, images, video, bool, lines }
+enum FT { text, multiline, number, email, url, date, select, country, image, images, video, bool, lines, richtext }
 
 class DField {
   final String key;
@@ -264,6 +265,8 @@ class _DashFormState extends State<DashForm> {
     switch (f.type) {
       case FT.select:
         return DropdownButtonFormField<String>(initialValue: _v[f.key] as String?, isExpanded: true, decoration: _dec(label), items: [for (final o in f.options) DropdownMenuItem(value: o.$1, child: Text(o.$2.contains('.') ? td(o.$2) : o.$2, style: GoogleFonts.tajawal(fontSize: 13)))], onChanged: (v) => setState(() => _v[f.key] = v));
+      case FT.richtext:
+        return RichTextField(controller: _c[f.key]!, label: f.required ? '${f.label} *' : f.label);
       case FT.lines:
         final rows = _lines[f.key] ?? [];
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -296,7 +296,7 @@ class _MyFactorySectionState extends State<MyFactorySection> {
                     DField('logo', td('factories.logo'), type: FT.image),
                   ], extra: keep)),
               tile(Icons.account_tree_outlined, '${t('add_factory.gates_label', 'الأبواب')} / ${t('add_factory.categories_label', 'التصنيفات')}', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatesCategoriesSection())).then((_) => _load())),
-              tile(Icons.article_outlined, td('factories.about_us'), () => _step(2, td('factories.about_us'), [DField('about', td('factories.about_us'), type: FT.multiline, required: true, translated: true)])),
+              tile(Icons.article_outlined, td('factories.about_us'), () => _step(2, td('factories.about_us'), [DField('about', td('factories.about_us'), type: FT.richtext, required: true, translated: true)])),
               tile(Icons.list_alt, td('factories.factory_activities'), () => _step(3, td('factories.factory_activities'), [DField('activities', td('factories.factory_activities'), type: FT.lines, required: true)])),
               tile(Icons.contact_phone_outlined, td('factories.address_details'), () => _step(4, td('factories.address_details'), [
                     DField('working_hours_from', td('factories.working_hours_from'), hint: '09:00'),

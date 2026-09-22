@@ -28,7 +28,7 @@ dependencies:
   audioplayers: ^6.8.1
   path_provider: ^2.1.6
   flutter_cache_manager: ^3.4.5
-
+  html: ^0.15.7
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -39,3 +39,6 @@ flutter:
   assets:
     - assets/images/
     - assets/locales/
+
+dependency_overrides:
+  record_platform_interface: 1.2.0

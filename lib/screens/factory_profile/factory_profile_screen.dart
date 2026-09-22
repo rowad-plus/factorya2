@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../widgets/shell_widgets.dart';
 import '../../widgets/site_footer.dart';
@@ -14,6 +15,7 @@ import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/net_image.dart';
+import '../../widgets/simple_html.dart';
 import '../../widgets/post_card.dart';
 import '../../models/post_model.dart';
 import '../auth/login_modal.dart';
@@ -394,6 +396,17 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
 
   // ───────────────────────── premium designs (themes 2–6) ─────────────────────────
 
+  /// Per-version visual identity for the premium designs (2–6): the site gives each package
+  /// tier its own hero/nav treatment (`ProfileV2`..`ProfileV6`); this mirrors that distinction
+  /// rather than reusing one shared look, while all six share the same tab content below.
+  bool get _darkTheme => _version == 3 || _version == 5;
+  Color get _pageBg => switch (_version) {
+        2 => const Color(0xFFFAF2E4),
+        4 => Colors.white,
+        6 => const Color(0xFFF7F4F0),
+        _ => const Color(0xFF1A1208),
+      };
+
   Widget _premium(Map<String, dynamic> f) {
     const ids = [
       'about',
@@ -417,8 +430,6 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       'team': t('factory_tabs.team', 'فريق العمل'),
       'contact': t('factory_tabs.contact', 'اتصل بنا'),
     };
-    final dark = _version == 4 || _version == 6;
-    final page = _version == 2 ? const Color(0xFFF7F4F0) : _light;
     Widget body;
     switch (_premiumTab) {
       case 'posts':
@@ -465,70 +476,178 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       default:
         body = _aboutTab(f, stacked: false);
     }
+
+    Widget tabBar() {
+      if (_version == 4) {
+        // V4: crisp white, underline tabs (no pill background).
+        return SizedBox(
+          height: 44,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            itemCount: ids.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 18),
+            itemBuilder: (_, i) {
+              final on = _premiumTab == ids[i];
+              return GestureDetector(
+                onTap: () => setState(() => _premiumTab = ids[i]),
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: on ? _primary : Colors.transparent, width: 3))),
+                  child: Text(labels[ids[i]]!, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: on ? FontWeight.w800 : FontWeight.w600, color: on ? const Color(0xFF1A1208) : const Color(0xFF999999))),
+                ),
+              );
+            },
+          ),
+        );
+      }
+      if (_version == 6) {
+        // V6: dark bar (site's TopNavV6), a home icon then the tabs, always dark regardless of theme colors.
+        return Container(
+          height: 50,
+          color: const Color(0xFF1A1208),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(children: [
+            GestureDetector(
+              onTap: () => context.go('/'),
+              child: Container(
+                width: 34, height: 34,
+                decoration: BoxDecoration(color: _primary.withAlpha(46), borderRadius: BorderRadius.circular(8), border: Border.all(color: _primary.withAlpha(90))),
+                child: const Icon(Icons.home_outlined, color: Colors.white, size: 17),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: ids.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 4),
+                itemBuilder: (_, i) {
+                  final on = _premiumTab == ids[i];
+                  return GestureDetector(
+                    onTap: () => setState(() => _premiumTab = ids[i]),
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(color: on ? _primary.withAlpha(46) : Colors.transparent, borderRadius: BorderRadius.circular(8)),
+                      child: Text(labels[ids[i]]!, style: GoogleFonts.tajawal(fontSize: 12.5, fontWeight: on ? FontWeight.w800 : FontWeight.w500, color: on ? _primary : Colors.white70)),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ]),
+        );
+      }
+      // V2/V3/V5: pill tabs (light for V2, dark-toned for V3/V5).
+      return SizedBox(
+        height: 46,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          itemCount: ids.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            final on = _premiumTab == ids[i];
+            final unselectedBg = _darkTheme ? Colors.white.withAlpha(15) : Colors.white;
+            final unselectedFg = _darkTheme ? Colors.white70 : const Color(0xFF4A5568);
+            final unselectedBorder = _darkTheme ? Colors.white24 : AppColors.border;
+            return GestureDetector(
+              onTap: () => setState(() => _premiumTab = ids[i]),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: on ? _primary : unselectedBg, borderRadius: BorderRadius.circular(22), border: Border.all(color: on ? _primary : unselectedBorder)),
+                child: Text(labels[ids[i]]!, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700, color: on ? Colors.white : unselectedFg)),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    Widget hero() {
+      final content = _premiumHero(f, _darkTheme || _version == 4);
+      switch (_version) {
+        case 2:
+          // Warm cream gradient page, plain white rounded card.
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _primary.withAlpha(46)),
+              boxShadow: [BoxShadow(color: _primary.withAlpha(20), blurRadius: 24, offset: const Offset(0, 6))],
+            ),
+            child: content,
+          );
+        case 3:
+          // Dark glass card: translucent fill + blur, over the brown gradient page.
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(color: Colors.white.withAlpha(15), borderRadius: BorderRadius.circular(20), border: Border.all(color: _primary.withAlpha(80))),
+                  child: content,
+                ),
+              ),
+            ),
+          );
+        case 4:
+          // White page, thin gold accent line above the hero, no card chrome.
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(14, 3, 14, 18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Container(height: 3, decoration: BoxDecoration(gradient: LinearGradient(colors: [_primary.withAlpha(0), _primary, _primary.withAlpha(0)]))),
+              const SizedBox(height: 18),
+              content,
+            ]),
+          );
+        case 5:
+          // Deep, near-black gradient page; hero content sits directly on it (no card), just an accent line.
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(18, 3, 18, 18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Container(height: 2, decoration: BoxDecoration(gradient: LinearGradient(colors: [_primary.withAlpha(0), _primary, _primary.withAlpha(0)]))),
+              const SizedBox(height: 18),
+              content,
+            ]),
+          );
+        default: // 6
+          // White "profile strip": the logo overlaps the cover's bottom edge like the site's ProfileStripV6.
+          return Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
+            child: content,
+          );
+      }
+    }
+
     return Container(
-      color: page,
+      decoration: BoxDecoration(
+        gradient: _version == 3
+            ? const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF3D2008), Color(0xFF7A4018), Color(0xFF5A3010), Color(0xFF2A1408)])
+            : _version == 5
+                ? const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A0D04), Color(0xFF3D2008), Color(0xFF7A4018), Color(0xFF1A0D04)])
+                : null,
+        color: _version == 3 || _version == 5 ? null : _pageBg,
+      ),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           if (!_featured) const HeaderBanner(),
+          if (_version == 6) tabBar(),
           if (_cover.isNotEmpty)
-            SizedBox(
-                height: 180,
-                width: double.infinity,
-                child: NetImage(
-                    url: _cover,
-                    fallback: '',
-                    width: double.infinity,
-                    height: 180)),
-          Container(
-            transform:
-                Matrix4.translationValues(0, _cover.isNotEmpty ? -30 : 0, 0),
-            margin: const EdgeInsets.symmetric(horizontal: 14),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: dark ? const Color(0xFF1A1208) : Colors.white,
-              borderRadius: BorderRadius.circular(_version == 3 ? 28 : 20),
-              border: Border.all(color: _primary.withAlpha(60)),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withAlpha(20),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8))
-              ],
-            ),
-            child: _premiumHero(f, dark),
-          ),
-          SizedBox(
-            height: 46,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              itemCount: ids.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (_, i) {
-                final on = _premiumTab == ids[i];
-                return GestureDetector(
-                  onTap: () => setState(() => _premiumTab = ids[i]),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: on ? _primary : Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                            color: on ? _primary : AppColors.border)),
-                    child: Text(labels[ids[i]]!,
-                        style: GoogleFonts.tajawal(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                on ? Colors.white : const Color(0xFF4A5568))),
-                  ),
-                );
-              },
-            ),
-          ),
-          body,
+            SizedBox(height: 180, width: double.infinity, child: NetImage(url: _cover, fallback: '', width: double.infinity, height: 180)),
+          Transform.translate(offset: Offset(0, _version != 6 && _cover.isNotEmpty ? -30 : 0), child: hero()),
+          if (_version != 6) tabBar(),
+          Container(color: _version == 6 ? const Color(0xFFF7F4F0) : null, child: body),
           const SiteFooter(),
         ],
       ),
@@ -554,7 +673,8 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
           padding: const EdgeInsets.all(8),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-              color: Colors.white,
+              color: _version == 4 ? null : (_darkTheme ? Colors.black.withAlpha(110) : Colors.white),
+              gradient: _version == 4 ? const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A1208), Color(0xFF3D2810)]) : null,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: _primary.withAlpha(90), width: 2)),
           child: NetImage(
@@ -712,7 +832,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
       );
 
   Widget _aboutTab(Map<String, dynamic> f, {bool stacked = true}) {
-    final about = _strip(AppData.tr(f, 'about'));
+    final aboutHtml = AppData.tr(f, 'about');
     final short = _strip(AppData.tr(f, 'short_description'));
     final founded = f['founded_year'];
     final employees = f['employees_count'];
@@ -731,11 +851,9 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                       fontWeight: FontWeight.w700,
                       color: _title)),
               const SizedBox(height: 8),
-              Text(about.isNotEmpty ? about : short,
-                  style: GoogleFonts.tajawal(
-                      fontSize: 14,
-                      color: const Color(0xFF4A5568),
-                      height: 1.8)),
+              aboutHtml.isNotEmpty
+                  ? SimpleHtml(data: aboutHtml, style: GoogleFonts.tajawal(fontSize: 14, color: const Color(0xFF4A5568), height: 1.8), linkColor: _primary)
+                  : Text(short, style: GoogleFonts.tajawal(fontSize: 14, color: const Color(0xFF4A5568), height: 1.8)),
               if (founded != null || employees != null) ...[
                 const SizedBox(height: 8),
                 Text(
