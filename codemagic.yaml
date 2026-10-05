@@ -14,7 +14,7 @@ workflows:
     integrations:
       app_store_connect: Factorya ASC
     environment:
-      flutter: stable
+      flutter: 3.44.8
       xcode: latest
       cocoapods: default
       vars:
