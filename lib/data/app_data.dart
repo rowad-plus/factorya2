@@ -202,9 +202,42 @@ class AppData {
     products = ApiClient.list(res['data']).map(productFromJson).toList();
   }
 
-  static Future<void> _loadPosts() async {
-    final res = await _api.get('/posts', query: {'per_page': 30, 'order': 'latest', 'country_id': countryId});
-    posts = ApiClient.list(res['data']).map(postFromJson).toList();
+  // Timeline exactly like the website home (useInfinitePosts): /posts?page=N&with_comments=true,
+  // no country filter, 15 per page; pages are not reliably sorted, so every loaded post is
+  // re-sorted newest-first.
+  static final List<Map<String, dynamic>> _rawPosts = [];
+  static int _postsPage = 0;
+  static int _postsLastPage = 1;
+  static bool postsLoadingMore = false;
+  static bool get hasMorePosts => _postsPage < _postsLastPage;
+
+  static Future<void> _fetchPostsPage(int page) async {
+    final res = await _api.get('/posts', query: {'page': page, 'with_comments': 'true'});
+    final meta = res['meta'];
+    if (meta is Map) _postsLastPage = (meta['last_page'] as num?)?.toInt() ?? page;
+    if (page == 1) _rawPosts.clear();
+    final seen = _rawPosts.map((p) => p['id']).toSet();
+    for (final p in ApiClient.list(res['data'])) {
+      final m = Map<String, dynamic>.from(p as Map);
+      if (seen.add(m['id'])) _rawPosts.add(m);
+    }
+    _postsPage = page;
+    DateTime at(Map<String, dynamic> p) => DateTime.tryParse((p['created_at'] ?? '').toString()) ?? DateTime(1970);
+    _rawPosts.sort((a, b) => at(b).compareTo(at(a)));
+    posts = _rawPosts.map(postFromJson).toList();
+  }
+
+  static Future<void> _loadPosts() => _fetchPostsPage(1);
+
+  static Future<void> loadMorePosts() async {
+    if (postsLoadingMore || !hasMorePosts) return;
+    postsLoadingMore = true;
+    revision.value++;
+    try {
+      await _fetchPostsPage(_postsPage + 1);
+    } catch (_) {}
+    postsLoadingMore = false;
+    revision.value++;
   }
 
   static Future<void> _loadOpportunities() async {

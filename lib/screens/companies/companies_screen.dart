@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/app_data.dart';
 import '../../models/factory_model.dart';
@@ -174,7 +173,7 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         color: Colors.white,
-                        padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+                        padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 0, 12),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(t('home.featured_factories', 'أهم المصانع'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700)),
                           const SizedBox(height: 10),
@@ -238,7 +237,7 @@ class _CompaniesScreenState extends State<CompaniesScreen> {
                       ),
                     ),
                   if (_loading) const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator(color: AppColors.gold)))),
-                  const SliverToBoxAdapter(child: SiteFooter()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               ),
             ),

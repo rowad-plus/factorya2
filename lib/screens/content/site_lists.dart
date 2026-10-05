@@ -11,7 +11,6 @@ import '../../widgets/apply_sheet.dart';
 import '../../widgets/banner_strip.dart';
 import '../../widgets/net_image.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../../widgets/site_widgets.dart';
 import '../factory_profile/factory_profile_screen.dart';
 
@@ -178,7 +177,7 @@ class _SponsorsScreenState extends State<SponsorsScreen> {
                 ElevatedButton(onPressed: () => context.push('/contact'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.gold, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))), child: Text(t('sponsors_page.contact_now', 'تواصل معنا الآن'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w800, color: AppColors.dark))),
               ]),
             ),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         );
       },
@@ -282,7 +281,7 @@ class _ApiListPageState extends State<_ApiListPage> {
             else
               for (final it in _items) widget.card(context, it),
             if (_loading) emptyState('', loading: true),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -397,7 +396,7 @@ class BlogDetailScreen extends StatelessWidget {
               Text(_plain(_first(p, ['content', 'body', 'description'])), style: GoogleFonts.tajawal(fontSize: 15, color: const Color(0xFF4A5568), height: 1.9)),
             ]),
           ),
-          const SiteFooter(),
+          const SizedBox(height: 24),
         ]);
       },
     );

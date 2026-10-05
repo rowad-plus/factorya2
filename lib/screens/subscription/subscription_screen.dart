@@ -10,7 +10,6 @@ import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../auth/login_modal.dart';
 import '../opportunities/opportunities_screen.dart' show tri;
 
@@ -170,7 +169,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ),
             ],
             TextButton(onPressed: () => context.push('/prices'), child: Text(t('about_hero.packages', 'باقات الاشتراك'), style: GoogleFonts.tajawal(color: AppColors.gold, fontWeight: FontWeight.w700))),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         );
       },

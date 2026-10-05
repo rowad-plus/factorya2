@@ -9,7 +9,6 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/net_image.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../auth/login_modal.dart';
 import 'opportunities_screen.dart';
 
@@ -116,7 +115,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                         ),
                         _requestCard(r),
                         _commentsCard(),
-                        const SiteFooter(),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),

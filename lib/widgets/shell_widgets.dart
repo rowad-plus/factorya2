@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/app_data.dart';
 import '../screens/auth/login_modal.dart';
 import '../services/auth_service.dart';
+import '../services/push_service.dart';
 import '../services/l10n.dart';
 import '../theme/app_theme.dart';
 import 'common_widgets.dart';
@@ -190,7 +191,7 @@ class _UserButton extends StatelessWidget {
             height: 1,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Divider(height: 1, color: Colors.white.withAlpha(30)));
-        return PopupMenuButton<String>(
+        final menu = PopupMenuButton<String>(
           color: AppColors.dark,
           offset: const Offset(0, 46),
           constraints: const BoxConstraints(minWidth: 210, maxWidth: 240),
@@ -245,14 +246,99 @@ class _UserButton extends StatelessWidget {
             item('logout', Icons.logout, t('nav.logout', 'تسجيل الخروج'),
                 color: const Color(0xFFFF6B6B)),
           ],
-          child: CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.gold,
-              child: Text(initial,
-                  style: GoogleFonts.tajawal(
-                      fontWeight: FontWeight.w800, color: AppColors.dark))),
+          child: _HeaderAvatar(initial: initial),
         );
+        return Row(mainAxisSize: MainAxisSize.min, children: [
+          const _NotificationBell(),
+          const SizedBox(width: 10),
+          menu,
+        ]);
       },
+    );
+  }
+}
+
+/// Signed-in user's photo in the header (initial on gold when there is none).
+class _HeaderAvatar extends StatelessWidget {
+  final String initial;
+  const _HeaderAvatar({required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = AuthService.i;
+    var url = auth.user == null ? '' : AppData.userImageUrl(auth.user!);
+    if (url.isNotEmpty && auth.avatarVersion != 0)
+      url = '$url${url.contains('?') ? '&' : '?'}v=${auth.avatarVersion}';
+    final letter = Text(initial,
+        style: GoogleFonts.tajawal(
+            fontWeight: FontWeight.w800, color: AppColors.dark));
+    return Container(
+      width: 36,
+      height: 36,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.gold,
+          border: Border.all(color: AppColors.gold, width: 1.5)),
+      alignment: Alignment.center,
+      child: url.isEmpty
+          ? letter
+          : CachedNetworkImage(
+              imageUrl: url,
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => letter,
+              errorWidget: (_, __, ___) => letter),
+    );
+  }
+}
+
+/// Header bell with the unread notifications count; opens `/notifications`.
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: PushService.unread,
+      builder: (context, count, _) => InkWell(
+        onTap: () => context.push('/notifications'),
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox(
+          width: 38,
+          height: 38,
+          child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.notifications_none,
+                    size: 24, color: AppColors.gold),
+                if (count > 0)
+                  PositionedDirectional(
+                    top: 2,
+                    end: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5, vertical: 1),
+                      constraints: const BoxConstraints(minWidth: 18),
+                      decoration: BoxDecoration(
+                          color: AppColors.red,
+                          borderRadius: BorderRadius.circular(10),
+                          border:
+                              Border.all(color: AppColors.dark, width: 1.5)),
+                      child: Text(count > 99 ? '99+' : '$count',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.tajawal(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              height: 1.3)),
+                    ),
+                  ),
+              ]),
+        ),
+      ),
     );
   }
 }
@@ -267,6 +353,11 @@ class HeaderBanner extends StatefulWidget {
 }
 
 class _HeaderBannerState extends State<HeaderBanner> {
+  // Per-location list + position kept for the session: when a scrolled-away banner is
+  // rebuilt it shows the same image at its known size at once (no shuffle, no jump).
+  static final Map<String, List<Map<String, dynamic>>> _cachedItems = {};
+  static final Map<String, int> _cachedIndex = {};
+
   List<Map<String, dynamic>> _items = [];
   int _index = 0;
   Timer? _timer;
@@ -274,7 +365,22 @@ class _HeaderBannerState extends State<HeaderBanner> {
   @override
   void initState() {
     super.initState();
-    _load();
+    final cached = _cachedItems[widget.location];
+    if (cached != null && cached.isNotEmpty) {
+      _items = cached;
+      _index = (_cachedIndex[widget.location] ?? 0) % cached.length;
+      _startTimer();
+    } else {
+      _load();
+    }
+  }
+
+  static String _urlOf(Map<String, dynamic> b) {
+    for (final k in const ['mobile_image_url', 'website_image_url']) {
+      final v = b[k];
+      if (v is String && v.isNotEmpty) return v;
+    }
+    return '';
   }
 
   @override
@@ -288,29 +394,37 @@ class _HeaderBannerState extends State<HeaderBanner> {
         await AppData.fetchBanners(widget.location))
       ..shuffle(Random());
     if (!mounted) return;
-    _timer?.cancel();
+    _cachedItems[widget.location] = list;
+    _cachedIndex[widget.location] = 0;
+    // Learn every banner's size up front so rotating never changes the slot height unexpectedly.
+    for (final b in list) {
+      ImageAspects.resolve(_urlOf(b)).then((_) {
+        if (mounted) setState(() {});
+      });
+    }
     setState(() {
       _items = list;
       _index = 0;
     });
-    if (list.length > 1) {
-      _timer = Timer.periodic(const Duration(seconds: 6), (_) async {
-        if (!mounted) return;
-        final next = (_index + 1) % _items.length;
-        // Switch only once the next banner is in the cache, so the slot never goes blank while it downloads.
-        final b = _items[next];
-        for (final k in const ['mobile_image_url', 'website_image_url']) {
-          final v = b[k];
-          if (v is String && v.isNotEmpty) {
-            try {
-              await precacheImage(CachedNetworkImageProvider(v), context);
-            } catch (_) {}
-            break;
-          }
-        }
-        if (mounted) setState(() => _index = next);
-      });
-    }
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    if (_items.length < 2) return;
+    _timer = Timer.periodic(const Duration(seconds: 6), (_) async {
+      if (!mounted) return;
+      final next = (_index + 1) % _items.length;
+      // Switch only once the next banner is downloaded and measured, so the slot never goes blank.
+      final url = _urlOf(_items[next]);
+      try {
+        await precacheImage(CachedNetworkImageProvider(url), context);
+      } catch (_) {}
+      await ImageAspects.resolve(url);
+      if (!mounted) return;
+      _cachedIndex[widget.location] = next;
+      setState(() => _index = next);
+    });
   }
 
   @override
@@ -325,15 +439,14 @@ class _HeaderBannerState extends State<HeaderBanner> {
       return const AspectRatio(
           aspectRatio: 3, child: ColoredBox(color: Color(0xFF3D3A35)));
     final b = _items[_index];
-    String url = '';
-    for (final k in const ['mobile_image_url', 'website_image_url']) {
-      final v = b[k];
-      if (v is String && v.isNotEmpty) {
-        url = v;
-        break;
-      }
-    }
+    final url = _urlOf(b);
     if (url.isEmpty) return const SizedBox.shrink();
+    final aspect = ImageAspects.of(url);
+    if (aspect == null) {
+      ImageAspects.resolve(url).then((_) {
+        if (mounted) setState(() {});
+      });
+    }
     return GestureDetector(
       onTap: () async {
         final link = b['link_url'] as String?;
@@ -341,20 +454,24 @@ class _HeaderBannerState extends State<HeaderBanner> {
         if (uri != null && await canLaunchUrl(uri))
           await launchUrl(uri, mode: LaunchMode.externalApplication);
       },
-      // Fixed 3:1 slot so the header never changes height while banners load or rotate.
-      child: AspectRatio(
-        aspectRatio: 3,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 500),
-          child: ColoredBox(
-            key: ValueKey(url),
-            color: const Color(0xFF3D3A35),
+      // Like the site: the whole banner at its own aspect ratio (width 100%, height auto).
+      // Sized by the image's real ratio (remembered in ImageAspects), so the height is
+      // final from the first frame on every rebuild — scrolling back up does not jump.
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 250),
+        child: AspectRatio(
+          aspectRatio: aspect ?? 3,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
             child: CachedNetworkImage(
+              key: ValueKey(url),
               imageUrl: url,
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
               fadeInDuration: const Duration(milliseconds: 150),
+              placeholder: (_, __) =>
+                  const ColoredBox(color: Color(0xFF3D3A35)),
               errorWidget: (_, __, ___) => const SizedBox.shrink(),
             ),
           ),

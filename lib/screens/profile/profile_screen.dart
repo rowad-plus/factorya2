@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../../data/app_data.dart';
 import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
@@ -10,7 +12,6 @@ import '../../widgets/common_widgets.dart';
 import '../../widgets/net_image.dart';
 import '../../widgets/post_card.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../auth/login_modal.dart';
 import '../opportunities/opportunities_screen.dart' show tri;
 
@@ -79,6 +80,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// Field being uploaded ('image' or 'banner_image'), for the spinner.
+  String? _uploading;
+  int _imgVersion = 0;
+
+  /// Same URL serves the new image after an upload: bust the image cache.
+  String _bust(String url) => url.isEmpty || _imgVersion == 0 ? url : '$url${url.contains('?') ? '&' : '?'}v=$_imgVersion';
+
+  /// Profile photo / logo (`image`) or cover (`banner_image`) — same fields as the site's edit profile.
+  Future<void> _upload(String field) async {
+    if (_uploading != null) return;
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: field == 'image' ? 800 : 1800);
+    if (picked == null) return;
+    setState(() => _uploading = field);
+    try {
+      final bytes = await picked.readAsBytes();
+      final res = await ApiClient.i.postMultipart('/profile', files: [MapEntry(field, http.MultipartFile.fromBytes(field, bytes, filename: picked.name))]);
+      _imgVersion = DateTime.now().millisecondsSinceEpoch;
+      final data = res['data'];
+      if (field == 'image' && data is Map && data['image'] != null) {
+        AuthService.i.updateUser({'image': data['image']}, imageChanged: true);
+      }
+      await _load();
+      if (mounted) showAppToast(context, '✅ ${t('edit_profile.toast_success_title', 'تم تحديث الملف الشخصي')}');
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, '⚠️ ${e.message}');
+    } catch (_) {
+      if (mounted) showAppToast(context, '⚠️ ${tri('تعذّر رفع الصورة', 'Görsel yüklenemedi', 'Could not upload the image')}');
+    } finally {
+      if (mounted) setState(() => _uploading = null);
+    }
+  }
+
+  Widget _photoButton(IconData icon, String label, VoidCallback onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(color: Colors.black.withAlpha(140), borderRadius: BorderRadius.circular(20)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            _uploading == 'banner_image'
+                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : Icon(icon, size: 16, color: Colors.white),
+            const SizedBox(width: 6),
+            Text(label, style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+          ]),
+        ),
+      );
+
+  /// In-app account deletion (App Store / Google Play requirement): DELETE /profile, then sign out.
+  Future<void> _confirmDeleteAccount() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (d) => AlertDialog(
+        title: Text(tri('حذف الحساب نهائياً؟', 'Hesap kalıcı olarak silinsin mi?', 'Delete your account permanently?'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w800)),
+        content: Text(
+          tri('سيتم حذف حسابك وبياناتك (المنشورات والتعليقات والرسائل) نهائياً، ولا يمكن التراجع عن ذلك.',
+              'Hesabınız ve verileriniz (gönderiler, yorumlar, mesajlar) kalıcı olarak silinecek. Bu işlem geri alınamaz.',
+              'Your account and data (posts, comments, messages) will be permanently deleted. This cannot be undone.'),
+          style: GoogleFonts.tajawal(height: 1.6),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(d, false), child: Text(tri('إلغاء', 'İptal', 'Cancel'), style: GoogleFonts.tajawal())),
+          TextButton(onPressed: () => Navigator.pop(d, true), child: Text(tri('حذف الحساب', 'Hesabı sil', 'Delete account'), style: GoogleFonts.tajawal(color: AppColors.red, fontWeight: FontWeight.w800))),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      await ApiClient.i.delete('/profile');
+      await AuthService.i.logout();
+      if (!mounted) return;
+      showAppToast(context, tri('تم حذف حسابك', 'Hesabınız silindi', 'Your account has been deleted'));
+      context.go('/');
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, '⚠️ ${e.message}');
+    } catch (_) {
+      if (mounted) showAppToast(context, '⚠️ ${tri('تعذّر حذف الحساب، حاول مرة أخرى', 'Hesap silinemedi', 'Could not delete the account')}');
+    }
+  }
+
   void _edit() {
     if (widget.userId != null) return;
     final u = _u!;
@@ -135,6 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final country = u['country'] is Map ? AppData.tr(Map<String, dynamic>.from(u['country'] as Map), 'name') : '';
         final city = u['city'] is Map ? AppData.tr(Map<String, dynamic>.from(u['city'] as Map), 'name') : '';
         final isFactory = u['account_type'] == 'factory';
+        final own = widget.userId == null;
         final desc = '${u['description'] ?? ''}';
         Widget link(IconData icon, String label, String route) => ListTile(
               leading: Icon(icon, color: AppColors.gold),
@@ -149,15 +230,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: EdgeInsets.zero,
             children: [
                 const HeaderBanner(),
-              Stack(clipBehavior: Clip.none, children: [
-                Container(height: 140, width: double.infinity, color: AppColors.dark, child: u['banner_image'] != null ? NetImage(url: '${ApiClient.host}/api/users/${u['id']}/banner', fallback: '', width: double.infinity, height: 140) : null),
-                PositionedDirectional(bottom: -40, start: 16, child: Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 4)), child: (u['account_type'] == 'factory' || u['has_factory'] == true) && AppData.userImageUrl(u).isEmpty
-                    ? Container(width: 84, height: 84, clipBehavior: Clip.antiAlias, decoration: const BoxDecoration(shape: BoxShape.circle), child: NetImage(url: u['factory_id'] != null ? '${ApiClient.host}/api/factories/${u['factory_id']}/logo' : '', brandFallback: true, fallbackSize: 22, width: 84, height: 84))
-                    : netAvatar(AppData.userImageUrl(u), name, size: 84))),
+              // Cover + avatar in one Stack whose own height includes the avatar's lower
+              // half, so the white section below can no longer paint over it.
+              Stack(children: [
+                Column(children: [
+                  Container(height: 140, width: double.infinity, color: AppColors.dark, child: NetImage(url: _bust('${ApiClient.host}/api/users/${u['id']}/banner'), fallback: '', width: double.infinity, height: 140)),
+                  Container(height: 52, color: Colors.white),
+                ]),
+                if (own)
+                  PositionedDirectional(top: 10, end: 10, child: _photoButton(Icons.photo_camera_outlined, t('profile_page.change_cover', 'تغيير الغلاف'), () => _upload('banner_image'))),
+                PositionedDirectional(top: 96, start: 16, child: Stack(clipBehavior: Clip.none, children: [
+                  Container(decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, border: Border.all(color: Colors.white, width: 4)), child: (u['account_type'] == 'factory' || u['has_factory'] == true) && AppData.userImageUrl(u).isEmpty
+                      ? Container(width: 88, height: 88, clipBehavior: Clip.antiAlias, decoration: const BoxDecoration(shape: BoxShape.circle), child: NetImage(url: u['factory_id'] != null ? '${ApiClient.host}/api/factories/${u['factory_id']}/logo' : '', brandFallback: true, fallbackSize: 22, width: 88, height: 88))
+                      : netAvatar(_bust(AppData.userImageUrl(u)), name, size: 88)),
+                  if (own)
+                    PositionedDirectional(bottom: 0, end: 0, child: GestureDetector(
+                      onTap: () => _upload('image'),
+                      child: Container(
+                        width: 32, height: 32,
+                        decoration: BoxDecoration(color: AppColors.gold, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                        child: _uploading == 'image'
+                            ? const Padding(padding: EdgeInsets.all(7), child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.dark))
+                            : const Icon(Icons.photo_camera, size: 16, color: AppColors.dark),
+                      ),
+                    )),
+                ])),
               ]),
               Container(
                 color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     Expanded(child: Text(name.isEmpty ? t('profile_page.default_user', 'مستخدم') : name, style: GoogleFonts.tajawal(fontSize: 22, fontWeight: FontWeight.w800))),
@@ -186,11 +287,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(height: 1),
                   link(Icons.history, t('nav.activity_log', 'سجل النشاط'), '/profile/activity-log'),
                   if (isFactory) ...[const Divider(height: 1), link(Icons.dashboard_outlined, t('nav.dashboard', 'لوحة التحكم'), '/dashboard')],
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.person_remove_outlined, color: AppColors.red),
+                    title: Text(tri('حذف الحساب', 'Hesabı sil', 'Delete account'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.red)),
+                    onTap: _confirmDeleteAccount,
+                  ),
                 ]),
               ),
               Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 4), child: Text(t('profile_page.posts', 'المنشورات'), style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w800))),
               if (_posts.isEmpty) emptyState(t('profile_page.no_posts', 'لا توجد منشورات حالياً')) else for (final p in _posts) PostCard(key: ValueKey(p['id']), post: AppData.postFromJson(p)),
-              const SiteFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         );
@@ -259,7 +366,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
               ]),
             ),
           ),
-      const SiteFooter(),
+      const SizedBox(height: 24),
     ]);
   }
 }
@@ -315,7 +422,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               ])),
             ]),
           ),
-      const SiteFooter(),
+      const SizedBox(height: 24),
     ]);
   }
 }
@@ -414,7 +521,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           );
         }),
       if (_loading) emptyState('', loading: true),
-      const SiteFooter(),
+      const SizedBox(height: 24),
     ]);
   }
 }

@@ -1,0 +1,37 @@
+# Codemagic CI: builds the Factorya iOS app on a cloud Mac and uploads it to App Store Connect.
+# One-time setup in Codemagic (codemagic.io):
+#   1. Teams → Integrations → Developer Portal: add an App Store Connect API key, name it "Factorya ASC".
+#   2. Add this repository as an application, then start the "ios-release" workflow.
+workflows:
+  ios-release:
+    name: Factorya iOS (App Store)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Factorya ASC
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: factorya.net
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+      - name: Code signing (profiles fetched by the integration)
+        script: xcode-project use-profiles
+      - name: CocoaPods
+        script: cd ios && pod install --repo-update
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

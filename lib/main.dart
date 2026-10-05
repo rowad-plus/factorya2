@@ -34,6 +34,8 @@ import 'widgets/async_loader.dart';
 import 'screens/auth/login_modal.dart';
 import 'models/factory_model.dart';
 import 'models/product_model.dart';
+import 'services/push_service.dart';
+import 'screens/notifications/notifications_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,7 +59,10 @@ void main() async {
       AppData.clearUserData();
     }
   });
+  PushService.navigate = (location) => _router.push(location);
   runApp(const FactoryaApp());
+  // Firebase/FCM after the first frame so a missing config never delays startup.
+  PushService.init().then((_) => WidgetsBinding.instance.addPostFrameCallback((_) => PushService.flushPendingOpen()));
 }
 
 final _router = GoRouter(
@@ -123,6 +128,7 @@ final _router = GoRouter(
       },
     ),
     GoRoute(path: '/chat', builder: (_, __) => const ChatListScreen()),
+    GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
     GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
     GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
     GoRoute(path: '/profile/orders', builder: (_, __) => const OrdersScreen()),
@@ -187,16 +193,15 @@ class FactoryaApp extends StatelessWidget {
             locale: Locale(L10n.i.lang),
             // Allow mouse/trackpad drag scrolling (web and desktop previews).
             scrollBehavior: const MaterialScrollBehavior().copyWith(dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.trackpad, PointerDeviceKind.stylus}),
-            builder: (context, child) => Directionality(
-              textDirection: dir,
-              // Phone-sized column on wide screens (web/desktop).
-              child: ColoredBox(
-                color: const Color(0xFF0E0E0E),
-                child: Center(
-                  child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: child!),
-                ),
-              ),
-            ),
+            builder: (context, child) {
+              // Fill the whole screen on every phone/tablet (no fixed-width column), and cap
+              // huge system font sizes so fixed-height rows don't overflow on big phones.
+              final mq = MediaQuery.of(context);
+              return MediaQuery(
+                data: mq.copyWith(textScaler: mq.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15)),
+                child: Directionality(textDirection: dir, child: child!),
+              );
+            },
           ),
         );
       },

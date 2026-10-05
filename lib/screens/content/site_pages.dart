@@ -8,7 +8,6 @@ import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../../widgets/site_widgets.dart';
 import '../auth/login_modal.dart';
 
@@ -228,7 +227,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   ),
                 ),
               ),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         );
       },
@@ -347,7 +346,7 @@ class _ContactScreenState extends State<ContactScreen> {
                 ),
               ]),
             ),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         );
       },
@@ -450,7 +449,7 @@ class _TermsScreenState extends State<TermsScreen> {
                     ),
                   ),
                 ),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         );
       },
@@ -528,7 +527,7 @@ class PricesScreen extends StatelessWidget {
                     ),
                   ]),
                 ),
-            const SiteFooter(),
+            const SizedBox(height: 24),
           ],
         );
       },

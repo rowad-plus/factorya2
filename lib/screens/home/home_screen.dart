@@ -1,28 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/app_data.dart';
 import '../../models/factory_model.dart';
-import '../../models/post_model.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/banner_strip.dart';
-import '../../widgets/net_image.dart';
+import '../../widgets/home_swiper.dart';
+import 'package:go_router/go_router.dart';
 import '../opportunities/create_opportunity_screen.dart';
-import '../opportunities/opportunities_screen.dart';
-import '../opportunities/opportunity_detail_screen.dart';
-import '../../widgets/common_widgets.dart';
-import '../../widgets/country_picker.dart';
-import '../../widgets/factory_card.dart';
 import '../../widgets/post_card.dart';
 import '../../services/auth_service.dart';
 import '../../services/l10n.dart';
 import '../auth/login_modal.dart';
 import '../gate/gate_screen.dart';
 import '../factory_profile/factory_profile_screen.dart';
-import '../dashboard/dashboard_screen.dart';
-import '../profile/profile_screen.dart';
 import '../timeline/create_post_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -50,23 +41,26 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(() {
+      if (_scroll.position.extentAfter < 1200) AppData.loadMorePosts();
+    });
     // Same banners the website shows between timeline posts.
     AppData.fetchBanners('timeline').then((b) {
       if (mounted) setState(() => _banners = b);
     });
   }
 
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
   /// Feed like the website home: a promo banner after every 3rd post, the opportunities
   /// strip after the 3rd, and a featured-factories grid after the 5th.
   List<Widget> _feed() {
     final posts = AppData.posts;
-    final out = <Widget>[
-      if (posts.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text(t('home.latest_posts', 'أحدث المنشورات'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
-        ),
-    ];
+    final out = <Widget>[];
     for (var i = 0; i < posts.length; i++) {
       out.add(PostCard(key: ValueKey(posts[i].id), post: posts[i]));
       if (i > 0 && (i + 1) % 3 == 0 && _banners.isNotEmpty) {
@@ -108,12 +102,22 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(child: _buildAgentBanner()),
               SliverToBoxAdapter(child: _buildDoorsSection()),
               SliverToBoxAdapter(child: _buildFactoriesSlider()),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
+                  child: Text(t('home.latest_posts', 'أحدث المنشورات'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
+                ),
+              ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (ctx, i) => feed[i],
                   childCount: feed.length,
                 ),
               ),
+              if (AppData.postsLoadingMore)
+                const SliverToBoxAdapter(
+                  child: Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: AppColors.gold))),
+                ),
               if (AppData.posts.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -124,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              const SliverToBoxAdapter(child: SiteFooter()),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
             ],
           ),
           ),
@@ -133,132 +137,72 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // ── Website mobile layout (app/(main)/client-page.tsx) ──
+
   Widget _buildDoorsSection() {
-    if (AppData.doors.isEmpty) return const SizedBox.shrink();
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(14, 12, 0, 12),
-      margin: const EdgeInsets.only(bottom: 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: SectionHeader(
-              title: 'الأبواب',
-              icon: Icons.door_front_door_outlined,
-              seeAllLabel: 'عرض الكل',
-              onSeeAll: widget.onGoCategories,
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 90,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: AppData.doors.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (_, i) => DoorChip(
-                door: AppData.doors[i],
-                onTap: () => _openGate(AppData.doors[i]),
-              ),
-            ),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+      child: SiteSidePost(
+        title: t('home.gates', 'الأبواب'),
+        loading: !AppData.loaded,
+        items: AppData.doors
+            .map((d) => SwiperItem(title: (d['name'] ?? d['short'] ?? '') as String, imageUrl: d['image'] as String?, onTap: () => _openGate(d)))
+            .toList(),
       ),
     );
   }
 
   Widget _buildFactoriesSlider() {
-    if (AppData.featured.isEmpty) return const SizedBox.shrink();
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(14, 12, 0, 12),
-      margin: const EdgeInsets.only(bottom: 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: SectionHeader(
-              title: 'أهم المصانع',
-              icon: Icons.factory_outlined,
-              seeAllLabel: 'عرض الكل',
-              onSeeAll: widget.onGoCompanies,
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 150,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: AppData.featured.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (_, i) => FactoryCardSm(
-                factory: AppData.featured[i],
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FactoryProfileScreen(factory: AppData.featured[i]))),
-              ),
-            ),
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: SiteSidePost(
+        title: t('home.featured_factories', 'أهم المصانع'),
+        isFactory: true,
+        phonePerView: 3.5,
+        loading: !AppData.loaded,
+        items: AppData.featured
+            .map((f) => SwiperItem(title: f.name, imageUrl: f.logoUrl, onTap: () => _openFactory(f)))
+            .toList(),
       ),
     );
   }
 
+  void _openFactory(FactoryModel f) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => FactoryProfileScreen(factory: f)));
+  }
+
+  /// AddPost: white card, avatar + read-only "إنشاء منشور" pill.
   Widget _buildComposer() {
+    final img = AuthService.i.user?['image'] as String?;
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
-      margin: const EdgeInsets.only(bottom: 5),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              AvatarCircle(label: AuthService.i.name.isEmpty ? '؟' : String.fromCharCode(AuthService.i.name.runes.first).toUpperCase(), color: '#D4A017', size: 34),
-              const SizedBox(width: 10),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _showPostModal(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                    decoration: BoxDecoration(
-                      color: AppColors.bg,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Text('اكتب منشورك هنا...', style: GoogleFonts.tajawal(fontSize: 12.5, color: const Color(0xFFAAAAAA))),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 9),
-          Container(
-            padding: const EdgeInsets.only(top: 9),
-            decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.border))),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _composerType(Icons.image_outlined, 'صورة'),
-                _composerType(Icons.videocam_outlined, 'فيديو'),
-                _composerType(Icons.star_outline, 'تقييم'),
-                _composerType(Icons.local_offer_outlined, 'منتج'),
-              ],
-            ),
-          ),
-        ],
+      margin: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [BoxShadow(color: const Color(0xFF101828).withAlpha(10), blurRadius: 2, offset: const Offset(0, 1))],
       ),
-    );
-  }
-
-  Widget _composerType(IconData icon, String label) {
-    return GestureDetector(
-      onTap: _showPostModal,
       child: Row(
         children: [
-          Icon(icon, color: AppColors.gold, size: 14),
-          const SizedBox(width: 4),
-          Text(label, style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted)),
+          SiteAvatar(url: img, name: AuthService.i.isLoggedIn ? AuthService.i.name : 'User', size: 38),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: _showPostModal,
+              child: Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                alignment: AlignmentDirectional.centerStart,
+                decoration: BoxDecoration(
+                  color: AppColors.bg,
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(t('home.create_post_placeholder', 'إنشاء منشور'), style: GoogleFonts.tajawal(fontSize: 13, color: const Color(0xFF98A2B3))),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -266,61 +210,75 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showPostModal() {
     if (!AuthService.i.isLoggedIn) {
-      showAppToast(context, 'سجّل الدخول لإضافة منشور');
       LoginModal.show(context);
       return;
     }
     Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen()));
   }
 
-  void _showPostModalOld() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _PostModal(),
-    );
-  }
-
-  /// "هل تبحث عن فرصة؟" call-to-action (same as the website's AgentBanner).
+  /// AgentBanner: dark gradient card, decorative gold circles, gold start bar,
+  /// outlined chips and a full-width "اطلب فرصتك" button.
   Widget _buildAgentBanner() {
     final items = [
-      [Icons.business, 'تريد أن تكون وكيلًا لمصنع'],
-      [Icons.search, 'تبحث عن منتج معين'],
-      [Icons.handshake_outlined, 'تبحث عن فرص للتعاون مع مصنع'],
+      [Icons.apartment, t('home.agent_banner_item_agent', 'تريد أن تكون وكيلًا لمصنع')],
+      [Icons.search, t('home.agent_banner_item_product', 'تبحث عن منتج معين')],
+      [Icons.handshake, t('home.agent_banner_item_partner', 'تبحث عن فرص للتعاون مع مصنع')],
     ];
+    void open() => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateOpportunityScreen()));
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateOpportunityScreen())),
+      onTap: open,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(10, 4, 10, 8),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.fromLTRB(12, 16, 12, 0),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.dark, Color(0xFF3D3A35)], begin: Alignment.topRight, end: Alignment.bottomLeft),
+          gradient: const LinearGradient(colors: [AppColors.dark, Color(0xFF3D3A35)], begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd),
           borderRadius: BorderRadius.circular(16),
-          border: const Border(right: BorderSide(color: AppColors.gold, width: 4)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text('هل تبحث عن فرصة؟ دعنا نوفرها لك نيابةً عنك.', style: GoogleFonts.tajawal(fontSize: 13.5, fontWeight: FontWeight.w800, color: Colors.white, height: 1.5)),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8, runSpacing: 6,
-              children: items.map((e) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: Colors.white.withAlpha(20), borderRadius: BorderRadius.circular(20)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(e[0] as IconData, color: AppColors.gold2, size: 13),
-                  const SizedBox(width: 5),
-                  Text(e[1] as String, style: GoogleFonts.tajawal(fontSize: 10.5, color: Colors.white70)),
-                ]),
-              )).toList(),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-              decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(20)),
-              child: Text('اطلب فرصتك', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+            PositionedDirectional(top: -40, end: -40, child: _circle(140, 31)),
+            PositionedDirectional(bottom: -55, start: 60, child: _circle(110, 18)),
+            PositionedDirectional(top: 0, bottom: 0, start: 0, child: Container(width: 4, color: AppColors.gold)),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(t('home.agent_banner_title', 'هل تبحث عن فرصة؟ دعنا نوفرها لك نيابةً عنك.'),
+                      style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white, height: 1.5)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8, runSpacing: 8,
+                    children: items.map((e) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(15),
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: Colors.white.withAlpha(41)),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(e[0] as IconData, color: AppColors.gold, size: 14),
+                        const SizedBox(width: 6),
+                        Text(e[1] as String, style: GoogleFonts.tajawal(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(235))),
+                      ]),
+                    )).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: open,
+                    child: Container(
+                      height: 44,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(100)),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.phone_in_talk_outlined, size: 16, color: Colors.black),
+                        const SizedBox(width: 8),
+                        Text(t('home.agent_banner_cta', 'اطلب فرصتك'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.black)),
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -328,43 +286,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _circle(double size, int alpha) => Container(
+        width: size, height: size,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.gold.withAlpha(alpha)),
+      );
+
+  /// Opportunities card shown after the 3rd post (mobile only on the site);
+  /// each one opens the factories list filtered by that opportunity.
   Widget _buildOpportunitiesStrip() {
     return Container(
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.fromLTRB(14, 12, 0, 12),
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 14),
-            child: SectionHeader(title: 'الفرص', icon: Icons.bolt_outlined, seeAllLabel: 'عرض الكل', onSeeAll: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OpportunitiesScreen()))),
-          ),
-          const SizedBox(height: 10),
+          SiteBlockTitle(t('gates.opportunities', 'الفرص')),
+          const SizedBox(height: 8),
           SizedBox(
-            height: 92,
+            height: 96,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: AppData.opportunities.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 16),
               itemBuilder: (_, i) {
                 final o = AppData.opportunities[i];
                 return GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OpportunityDetailScreen(opp: o))),
+                  onTap: () => context.push('/companies?opportunity_id=${o.id}&title=${Uri.encodeQueryComponent(o.title)}'),
                   child: SizedBox(
                     width: 72,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 60, height: 60,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFFFF8E7)),
-                          child: NetImage(url: o.imageUrl, fallback: o.emoji, fallbackSize: 24, width: 60, height: 60),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(o.title, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: GoogleFonts.tajawal(fontSize: 10, color: AppColors.text)),
-                      ],
-                    ),
+                    child: Column(children: [
+                      SiteAvatar(url: o.imageUrl, name: o.title, size: 60),
+                      const SizedBox(height: 4),
+                      Text(o.title, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                          style: GoogleFonts.tajawal(fontSize: 11, color: AppColors.text, height: 1.3)),
+                    ]),
                   ),
                 );
               },
@@ -375,138 +331,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// PromoSlider after the 5th post: 2 featured factories (mobile), outlined cards.
   Widget _buildFeaturedGrid() {
-    final list = AppData.featured.take(4).toList();
-    return Container(
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(14),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 1.35,
-        children: list.map((f) => GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FactoryProfileScreen(factory: f))),
-          child: Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-            child: Column(
-              children: [
-                Expanded(child: NetImage(url: f.logoUrl, brandFallback: true, fallback: f.emoji, fallbackSize: 34, width: double.infinity, height: double.infinity, fit: BoxFit.contain)),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(7),
-                  color: Colors.white,
-                  child: Text(f.name, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.text)),
-                ),
-              ],
-            ),
-          ),
-        )).toList(),
-      ),
-    );
-  }
-}
-
-class _PostModal extends StatefulWidget {
-  const _PostModal();
-
-  @override
-  State<_PostModal> createState() => _PostModalState();
-}
-
-class _PostModalState extends State<_PostModal> {
-  final _ctrl = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      child: Column(
+    final list = AppData.featured.take(2).toList();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 10),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 30, height: 30,
-                    decoration: BoxDecoration(color: AppColors.bg, shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.close, size: 15),
+          for (var i = 0; i < list.length; i++) ...[
+            if (i > 0) const SizedBox(width: 16),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _openFactory(list[i]),
+                child: Container(
+                  height: 180,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(19), border: Border.all(color: const Color(0xFF555555))),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SiteAvatar(url: list[i].logoUrl, name: list[i].name, size: 100, isFactory: true),
+                      const SizedBox(height: 12),
+                      Text(list[i].name, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                          style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.black, height: 1.2)),
+                    ],
                   ),
-                ),
-                const Spacer(),
-                Text('إضافة منشور', style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w800)),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                    showAppToast(context, '✅ تم نشر منشورك بنجاح!');
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                    decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(20)),
-                    child: Text('نشر', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: TextField(
-                controller: _ctrl,
-                maxLines: null,
-                expands: true,
-                textAlign: TextAlign.right,
-                textDirection: TextDirection.rtl,
-                style: GoogleFonts.tajawal(fontSize: 14, color: AppColors.text),
-                decoration: InputDecoration(
-                  hintText: 'شارك رأيك أو تجربتك...',
-                  hintStyle: GoogleFonts.tajawal(color: const Color(0xFFBBBBBB)),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
                 ),
               ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
-            decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.border))),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _modalType(Icons.image_outlined, 'صورة'),
-                _modalType(Icons.videocam_outlined, 'فيديو'),
-                _modalType(Icons.star_outline, 'تقييم'),
-                _modalType(Icons.local_offer_outlined, 'منتج'),
-              ],
-            ),
-          ),
+          ],
+          if (list.length == 1) const Expanded(child: SizedBox()),
         ],
       ),
-    );
-  }
-
-  Widget _modalType(IconData icon, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: AppColors.gold, size: 22),
-        const SizedBox(height: 3),
-        Text(label, style: GoogleFonts.tajawal(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w700)),
-      ],
     );
   }
 }

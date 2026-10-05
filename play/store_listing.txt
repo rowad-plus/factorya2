@@ -1,0 +1,96 @@
+فاكتوريا — بيانات صفحة التطبيق في Google Play
+==============================================
+
+الملفات في نفس الفولدر:
+- factorya.aab                     ← الملف اللي يترفع (Production / Internal testing)
+- play_store_icon_512.png          ← App icon (512×512)
+- feature_graphic_1024x500.png     ← Feature graphic
+- صور الشاشة (Screenshots): خدها من موبايلك، 2 على الأقل (يفضّل 4–8)، بالطول.
+
+Package name: factorya.net
+Version: 1.0.0 (1)
+Category: Business (أعمال)
+Privacy policy URL: https://factorya.net/privacy
+Account deletion URL: https://factorya.net/delete-account
+Website: https://factorya.net
+
+
+----- العربية (ar) -----
+
+اسم التطبيق (حد أقصى 30 حرف):
+فاكتوريا - منصة المصانع
+
+الوصف القصير (حد أقصى 80 حرف):
+دليل المصانع والتبادل الصناعي: ابحث عن مصانع، اطلب عروض أسعار، وتواصل مباشرة.
+
+الوصف الكامل:
+فاكتوريا هي منصة التبادل الصناعي والتجاري التي تربط المصانع بالتجار والمشترين في السعودية ومصر وتركيا.
+
+مع فاكتوريا تقدر:
+• تتصفح آلاف المصانع حسب الأبواب والأقسام الصناعية والدولة والمدينة.
+• تشوف ملف كل مصنع: نبذة، منتجات، كتالوجات، فريق العمل، وبيانات التواصل.
+• تطلب عرض سعر من أي مصنع مباشرة.
+• تنشر طلب فرصة (وكالة، توزيع، تصنيع للغير، شراء بالجملة) وتستقبل ردود المصانع.
+• تراسل المصانع بالرسائل النصية والصور والرسائل الصوتية.
+• تتابع آخر تحديثات المصانع ومنشوراتها في الصفحة الرئيسية.
+• تتقدم على الوظائف المتاحة في المصانع.
+• تستقبل إشعارات فورية بالرسائل والتعليقات والطلبات والفرص الجديدة.
+
+لأصحاب المصانع:
+• سجّل مصنعك وأدر ملفه ومنتجاته من لوحة تحكم داخل التطبيق.
+• استقبل طلبات عروض الأسعار وطلبات الانضمام والتقديمات على الوظائف.
+• ارفع ظهور مصنعك عبر باقات الاشتراك.
+
+فاكتوريا — من المصنع إلى الأسواق، محلياً ودولياً.
+
+
+----- English (en-US) -----
+
+App name (max 30):
+Factorya - Factories Platform
+
+Short description (max 80):
+Industrial directory: find factories, request quotes and contact them directly.
+
+Full description:
+Factorya is an industrial and trade exchange platform connecting factories with traders and buyers in Saudi Arabia, Egypt and Turkey.
+
+With Factorya you can:
+• Browse thousands of factories by industrial sector, category, country and city.
+• View each factory's profile: about, products, catalogs, team and contact details.
+• Request a price quote from any factory.
+• Post an opportunity request (agency, distribution, contract manufacturing, wholesale) and receive factory replies.
+• Chat with factories using text, photos and voice messages.
+• Follow the latest factory updates and posts on the home feed.
+• Apply for jobs at factories.
+• Get instant notifications for messages, comments, requests and new opportunities.
+
+For factory owners:
+• Register your factory and manage its profile and products from an in-app dashboard.
+• Receive quote requests, join requests and job applications.
+• Boost your factory's visibility with subscription packages.
+
+Factorya — from the factory to the markets, locally and internationally.
+
+
+----- Data safety (أمان البيانات) — الإجابات المقترحة -----
+
+البيانات اللي التطبيق بيجمعها (كلها مرتبطة بحساب المستخدم، ومش بتتباع لطرف تالت):
+- Personal info: Name, Email address, Phone number  → Account management, App functionality
+- Photos: صور البروفايل والغلاف وصور المنشورات والشات  → App functionality
+- Audio: الرسائل الصوتية في الشات  → App functionality
+- Messages: رسائل الشات  → App functionality
+- Approximate location: لاختيار الدولة تلقائياً أول مرة (اختياري)  → App functionality
+- Device or other IDs: Firebase push token  → App functionality (الإشعارات)
+- Data is encrypted in transit: Yes (HTTPS)
+- Users can request data deletion: Yes → https://factorya.net/delete-account
+
+الأذونات (Permissions):
+- Location: اختيار الدولة أول تشغيل (country_gate)
+- Microphone: تسجيل الرسائل الصوتية في الشات
+- Notifications: الإشعارات الفورية
+- Camera/Photos: عبر منتقي الصور فقط (رفع صور)
+
+Content rating: أجب على الاستبيان — التطبيق فيه تواصل بين المستخدمين (User interaction / chat) ومحتوى ينشره المستخدمين.
+Target audience: 18+
+Ads: No (التطبيق لا يعرض إعلانات طرف تالت)

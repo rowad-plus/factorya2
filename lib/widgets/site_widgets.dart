@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -81,6 +82,8 @@ class SiteCard extends StatelessWidget {
 
   const SiteCard({super.key, required this.imageUrl, required this.title, this.subTitle = '', this.fallback = '🏭', this.brandFallback = false, this.onTap});
 
+  static const double imageAspect = 1.35;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -90,12 +93,15 @@ class SiteCard extends StatelessWidget {
         decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(8)),
         child: Column(
           children: [
-            Container(
-              height: 131,
-              width: double.infinity,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: const Color(0xFFFEF8E8)),
-              child: NetImage(url: imageUrl, brandFallback: brandFallback, fallback: fallback, fallbackSize: 40, width: double.infinity, height: 131),
+            // Image scales with the card width; [CardsGrid] reserves room for the title below it.
+            AspectRatio(
+              aspectRatio: SiteCard.imageAspect,
+              child: Container(
+                width: double.infinity,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: const Color(0xFFFEF8E8)),
+                child: NetImage(url: imageUrl, brandFallback: brandFallback, fallback: fallback, fallbackSize: 40, width: double.infinity, height: double.infinity),
+              ),
             ),
             Expanded(
               child: Center(
@@ -125,16 +131,27 @@ class CardsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 0.95,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-      children: children,
-    );
+    // Card height = image (scales with width) + a fixed text area sized for a 2-line
+    // title and the subtitle at the current font scale, so names are never clipped.
+    return LayoutBuilder(builder: (context, c) {
+      final cols = c.maxWidth >= 700 ? 3 : 2;
+      final cellW = (c.maxWidth - 32 - 16 * (cols - 1)) / cols;
+      final scale = MediaQuery.textScalerOf(context);
+      final textH = 10 + 4 + scale.scale(14) * 1.5 * 2 + scale.scale(12) * 1.6 + 6;
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: cols,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          mainAxisExtent: 16 + (cellW - 16) / SiteCard.imageAspect + textH,
+        ),
+        itemCount: children.length,
+        itemBuilder: (_, i) => children[i],
+      );
+    });
   }
 }
 
@@ -238,7 +255,10 @@ class SiteSlider extends StatefulWidget {
 }
 
 class _SiteSliderState extends State<SiteSlider> {
-  List<Map<String, dynamic>> _items = [];
+  // Kept for the session so a slider rebuilt after scrolling back shows at full height at once.
+  static List<Map<String, dynamic>> _lastItems = [];
+
+  List<Map<String, dynamic>> _items = _lastItems;
   final _controller = PageController();
   Timer? _timer;
   int _page = 0;
@@ -246,14 +266,23 @@ class _SiteSliderState extends State<SiteSlider> {
   @override
   void initState() {
     super.initState();
+    if (_items.isNotEmpty) {
+      _startTimer();
+      return;
+    }
     AppData.fetchSliders().then((s) {
       if (!mounted || s.isEmpty) return;
+      _lastItems = s;
       setState(() => _items = s);
-      if (s.length > 1) {
-        _timer = Timer.periodic(const Duration(seconds: 5), (_) {
-          if (_controller.hasClients) _controller.animateToPage((_page + 1) % _items.length, duration: const Duration(milliseconds: 800), curve: Curves.easeInOut);
-        });
-      }
+      _resolveAspect(_imageOf(s.first));
+      _startTimer();
+    });
+  }
+
+  void _startTimer() {
+    if (_items.length < 2) return;
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (_controller.hasClients) _controller.animateToPage((_page + 1) % _items.length, duration: const Duration(milliseconds: 800), curve: Curves.easeInOut);
     });
   }
 
@@ -264,18 +293,31 @@ class _SiteSliderState extends State<SiteSlider> {
     super.dispose();
   }
 
+  // Like the site (width 100%, height auto): size the slider by the real image ratio
+  // instead of a fixed 16:9 cover crop, which cut the slide's text on wide phones.
+  double get _aspect => _items.isEmpty ? 16 / 9 : (ImageAspects.of(_imageOf(_items.first) ?? '') ?? 16 / 9);
+
+  String? _imageOf(Map<String, dynamic> s) =>
+      ((s['mobile_image_url'] as String?)?.isNotEmpty ?? false) ? s['mobile_image_url'] as String : (s['website_image_url'] as String?);
+
+  void _resolveAspect(String? url) {
+    ImageAspects.resolve(url ?? '').then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_items.isEmpty) return const SizedBox.shrink();
     return AspectRatio(
-      aspectRatio: 16 / 9,
+      aspectRatio: _aspect,
       child: PageView.builder(
         controller: _controller,
         itemCount: _items.length,
         onPageChanged: (i) => _page = i,
         itemBuilder: (_, i) {
           final s = _items[i];
-          final img = ((s['mobile_image_url'] as String?)?.isNotEmpty ?? false) ? s['mobile_image_url'] as String : (s['website_image_url'] as String?);
+          final img = _imageOf(s);
           final header = AppData.tr(s, 'header');
           final desc = AppData.tr(s, 'description');
           return Stack(

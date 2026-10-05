@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
+import 'push_service.dart';
 
 /// Holds the signed-in user and the Sanctum token (persisted locally).
 class AuthService extends ChangeNotifier {
@@ -39,6 +40,17 @@ class AuthService extends ChangeNotifier {
   }
 
   /// Restores a saved session; drops it if the server rejects the token.
+  /// Bumped after the user changes their photo, so cached avatar images reload.
+  int avatarVersion = 0;
+
+  /// Merge fresh profile fields (e.g. the new `image` after an upload) and refresh listeners (header avatar).
+  void updateUser(Map<String, dynamic> data, {bool imageChanged = false}) {
+    if (user == null) return;
+    user!.addAll(data);
+    if (imageChanged) avatarVersion = DateTime.now().millisecondsSinceEpoch;
+    notifyListeners();
+  }
+
   Future<void> restore() async {
     ApiClient.i.onUnauthorized = () => _clear(notify: true);
     try {
@@ -112,6 +124,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    await PushService.unregister();
     try {
       await ApiClient.i.post('/auth/logout');
     } catch (_) {}

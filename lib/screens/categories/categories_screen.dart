@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/app_data.dart';
@@ -111,7 +110,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   ],
                 ),
               ],
-              const SiteFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         );

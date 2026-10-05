@@ -47,3 +47,14 @@ app.*.map.json
 # Project extras
 _bk/
 *.apk
+
+# Release signing secrets — never commit (backup them separately)
+android/key.properties
+android/upload-keystore.jks
+*.jks
+*.keystore
+
+# Store upload artifacts / local builds
+play/*.aab
+play/tablet10/
+*.apk

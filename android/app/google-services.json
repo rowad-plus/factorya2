@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "579645088187",
+    "project_id": "factorya-63ae2",
+    "storage_bucket": "factorya-63ae2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:579645088187:android:6e38d6cf389c7a08e9e49e",
+        "android_client_info": {
+          "package_name": "factorya.net"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF_zwfJU10uhG3nuXCIPfHYzjjI3Ik2wE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

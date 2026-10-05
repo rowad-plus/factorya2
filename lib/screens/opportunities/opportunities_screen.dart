@@ -7,7 +7,6 @@ import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
 import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/site_footer.dart';
 import '../auth/login_modal.dart';
 import 'create_opportunity_screen.dart';
 
@@ -154,7 +153,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
                 )
               else
                 for (final r in _items) _card(r),
-              const SiteFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         );

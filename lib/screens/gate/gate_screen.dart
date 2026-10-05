@@ -9,7 +9,6 @@ import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/banner_strip.dart';
 import '../../widgets/net_image.dart';
-import '../../widgets/site_footer.dart';
 import '../../widgets/site_widgets.dart';
 import '../companies/companies_screen.dart';
 import '../factory_profile/factory_profile_screen.dart';
@@ -150,7 +149,7 @@ class _GateScreenState extends State<GateScreen> {
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     color: Colors.white,
-                    padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+                    padding: const EdgeInsetsDirectional.fromSTEB(12, 12, 0, 12),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(t('home.featured_factories', 'أهم المصانع'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 10),
@@ -220,7 +219,7 @@ class _GateScreenState extends State<GateScreen> {
                     ],
                   ),
                 if (_loading) const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator(color: AppColors.gold))),
-                const SiteFooter(),
+                const SizedBox(height: 24),
               ],
             ),
           ),

@@ -10,7 +10,6 @@ import '../../services/api_client.dart';
 import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/net_image.dart';
-import '../../widgets/site_footer.dart';
 import '../factory_profile/factory_profile_screen.dart';
 
 /// `/product/{id}`: image gallery with thumbnails, category badge, name, price, description,
@@ -192,7 +191,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ],
             ),
           ),
-          const SiteFooter(),
+          const SizedBox(height: 24),
         ],
       ),
       _back(),

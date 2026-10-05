@@ -7,7 +7,6 @@ import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/net_image.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../auth/login_modal.dart';
 import '../dashboard/dash_sections.dart' show DashChatBody;
 import 'chat_screen.dart';
@@ -108,7 +107,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       ]),
                     ),
                   ),
-              const SiteFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         );

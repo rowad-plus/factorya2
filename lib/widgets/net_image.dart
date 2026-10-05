@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -39,5 +40,38 @@ class NetImage extends StatelessWidget {
       placeholder: (_, __) => const SizedBox.shrink(),
       errorWidget: (_, __, ___) => placeholder,
     );
+  }
+}
+
+/// Remembers each network image's aspect ratio (width / height) for the whole session,
+/// so widgets that size themselves by their image (header banner, slider) get the
+/// right height immediately when rebuilt — no height jump / scroll jitter.
+class ImageAspects {
+  ImageAspects._();
+  static final Map<String, double> _known = {};
+  static final Map<String, Future<double?>> _pending = {};
+
+  static double? of(String url) => _known[url];
+
+  static Future<double?> resolve(String url) {
+    if (url.isEmpty) return Future.value(null);
+    final known = _known[url];
+    if (known != null) return Future.value(known);
+    return _pending[url] ??= () {
+      final done = Completer<double?>();
+      final stream = CachedNetworkImageProvider(url).resolve(const ImageConfiguration());
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener((info, _) {
+        stream.removeListener(listener);
+        final w = info.image.width, h = info.image.height;
+        if (w > 0 && h > 0) _known[url] = w / h;
+        if (!done.isCompleted) done.complete(_known[url]);
+      }, onError: (_, __) {
+        stream.removeListener(listener);
+        if (!done.isCompleted) done.complete(null);
+      });
+      stream.addListener(listener);
+      return done.future.whenComplete(() => _pending.remove(url));
+    }();
   }
 }

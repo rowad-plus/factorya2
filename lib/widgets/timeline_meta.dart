@@ -175,7 +175,7 @@ String activityHeader(String lead) {
   }
   if (key == null) return cleanName(lead);
   final label = L10n.i.t(key);
-  return name.isEmpty ? label : '$label («$name»)';
+  return name.isEmpty ? label : '$label ($name)';
 }
 
 bool isLtrValue(String value, String key, String label) {

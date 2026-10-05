@@ -8,7 +8,6 @@ import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/banner_strip.dart';
 import '../../widgets/net_image.dart';
-import '../../widgets/site_footer.dart';
 import '../../widgets/site_widgets.dart';
 import '../product_detail/product_detail_screen.dart';
 
@@ -174,7 +173,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   ],
                 ),
               SitePagination(current: _page, last: _last, onPage: _load),
-              const SiteFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         );

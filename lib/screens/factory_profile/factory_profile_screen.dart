@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../widgets/shell_widgets.dart';
-import '../../widgets/site_footer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
@@ -144,7 +143,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                               if (_tab == 0) _aboutTab(f),
                               if (_tab == 1 && _featured) _postsTab(f),
                               if (_tab == (_featured ? 2 : 1)) _contactTab(f),
-                              const SiteFooter(),
+                              const SizedBox(height: 24),
                             ],
                           ),
                     _back(),
@@ -648,7 +647,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
           Transform.translate(offset: Offset(0, _version != 6 && _cover.isNotEmpty ? -30 : 0), child: hero()),
           if (_version != 6) tabBar(),
           Container(color: _version == 6 ? const Color(0xFFF7F4F0) : null, child: body),
-          const SiteFooter(),
+          const SizedBox(height: 24),
         ],
       ),
     );

@@ -10,7 +10,6 @@ import '../../services/auth_service.dart';
 import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
-import '../../widgets/site_footer.dart';
 import '../auth/login_modal.dart';
 
 /// `/factory/create`: two-step factory registration (`POST /factories/register`).
@@ -179,7 +178,7 @@ class _AddFactoryScreenState extends State<AddFactoryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _step == 0 ? _step1() : _step2(),
           ),
-          const SiteFooter(),
+          const SizedBox(height: 24),
         ],
       ),
     );
