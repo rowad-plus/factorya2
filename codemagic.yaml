@@ -1,7 +1,11 @@
 # Codemagic CI: builds the Factorya iOS app on a cloud Mac and uploads it to App Store Connect.
 # One-time setup in Codemagic (codemagic.io):
-#   1. Teams → Integrations → Developer Portal: add an App Store Connect API key, name it "Factorya ASC".
+#   1. Settings → Integrations → Developer Portal: add an App Store Connect API key, name it "Factorya ASC".
 #   2. Add this repository as an application, then start the "ios-release" workflow.
+# Signing is fully automatic: the build creates (or reuses) the App Store certificate and
+# provisioning profile for factorya.net through the App Store Connect API.
+# To stop a new certificate being created on every build, save a fixed RSA key as the secret
+# environment variable CERTIFICATE_PRIVATE_KEY (group "ios_signing") — the build uses it when present.
 workflows:
   ios-release:
     name: Factorya iOS (App Store)
@@ -13,13 +17,26 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: factorya.net
+      vars:
+        BUNDLE_ID: factorya.net
     scripts:
       - name: Flutter packages
         script: flutter pub get
-      - name: Code signing (profiles fetched by the integration)
+      - name: Set up keychain
+        script: keychain initialize
+      - name: Fetch or create signing files
+        script: |
+          if [ -z "$CERTIFICATE_PRIVATE_KEY" ]; then
+            ssh-keygen -t rsa -b 2048 -m PEM -f /tmp/cert_key -q -N ""
+            export CERTIFICATE_PRIVATE_KEY="$(cat /tmp/cert_key)"
+          fi
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+            --create
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+      - name: Use profiles in Xcode project
         script: xcode-project use-profiles
       - name: CocoaPods
         script: cd ios && pod install --repo-update
