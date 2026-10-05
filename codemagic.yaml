@@ -17,6 +17,8 @@ workflows:
       flutter: 3.44.8
       xcode: latest
       cocoapods: default
+      groups:
+        - ios_signing
       vars:
         BUNDLE_ID: factorya.net
     scripts:

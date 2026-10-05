@@ -16,7 +16,7 @@ dependencies:
   shimmer: ^3.0.0
   flutter_svg: ^2.0.9
   url_launcher: ^6.3.0
-  share_plus: ^9.0.0
+  share_plus: ^12.0.2
   image_picker: ^1.1.2
   provider: ^6.1.2
   intl: ^0.19.0
@@ -29,8 +29,8 @@ dependencies:
   path_provider: ^2.1.6
   flutter_cache_manager: ^3.4.5
   html: ^0.15.7
-  firebase_core: ^3.4.0
-  firebase_messaging: ^15.1.0
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
   flutter_local_notifications: ^18.0.1
 dev_dependencies:
   flutter_test:

@@ -58,3 +58,6 @@ android/upload-keystore.jks
 play/*.aab
 play/tablet10/
 *.apk
+
+# Codemagic certificate private key (secret, never commit)
+ios_signing_secret/
