@@ -364,7 +364,7 @@
     "opportunities_label": "Fabrika Fırsatları & Seçenekleri (En az birini seçin)",
     "validation_username_req": "Kullanıcı adı gereklidir",
     "nickname_label": "Kullanıcı Adı",
-    "nickname_hint": "(Sadece İngilizce, boşluksuz)",
+    "nickname_hint": "(Sadece İngilizce, boşluksuz, en fazla 20 karakter)",
     "nickname_placeholder": "Kullanıcı adı girin...",
     "validation_nickname_req": "Kullanıcı adı gereklidir",
     "validation_password_min": "Şifre en az 6 karakter olmalıdır",
@@ -416,7 +416,9 @@
       "livestock": "Hayvancılık",
       "fisheries": "Balıkçılık",
       "other": "Diğer"
-    }
+    },
+    "validation_nickname_invalid": "Kullanıcı adı tek kelime: yalnızca küçük İngilizce harfler, rakamlar ve _",
+    "validation_nickname_max": "Kullanıcı adı en fazla 20 karakter"
   },
   "prices": {
     "title": "Fiyatlandırma Planları",

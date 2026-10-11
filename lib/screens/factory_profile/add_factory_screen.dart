@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../widgets/shell_widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -78,7 +79,8 @@ class _AddFactoryScreenState extends State<AddFactoryScreen> {
     if (_name.text.trim().isEmpty) return _no(t('add_factory.validation_factory_name_req', 'اسم المصنع مطلوب'));
     if (_password.text.length < 6) return _no(t('add_factory.validation_password_min', 'كلمة المرور 6 أحرف على الأقل'));
     if (_password.text != _confirm.text) return _no(t('add_factory.validation_confirm_password_match', 'كلمتا المرور غير متطابقتين'));
-    if (_nickname.text.trim().isNotEmpty && !RegExp(r'^[a-zA-Z0-9_-]+$').hasMatch(_nickname.text.trim())) return _no(t('add_factory.validation_nickname_invalid', 'أحرف إنجليزية وأرقام فقط'));
+    // Username = factory URL: one word, a-z 0-9 _, at most 20 characters (same rule as the backend).
+    if (_nickname.text.trim().isNotEmpty && !RegExp(r'^[a-z0-9_]{1,20}$').hasMatch(_nickname.text.trim())) return _no(t('add_factory.validation_nickname_invalid', 'أحرف إنجليزية وأرقام فقط'));
     if (_responsible.text.trim().isEmpty) return _no(t('add_factory.validation_responsible_name_req', 'اسم المسؤول مطلوب'));
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim())) return _no(t('add_factory.validation_email_invalid', 'بريد غير صالح'));
     if (_phone.text.trim().length < 7) return _no(t('add_factory.validation_phone_req', 'رقم الهاتف مطلوب'));
@@ -192,7 +194,13 @@ class _AddFactoryScreenState extends State<AddFactoryScreen> {
         _l(t('add_factory.confirm_password_label')),
         TextField(controller: _confirm, obscureText: _hidePass, decoration: _dec(t('add_factory.confirm_password_placeholder'))),
         _l('${t('add_factory.nickname_label')} ${t('add_factory.nickname_hint')}'),
-        TextField(controller: _nickname, textDirection: TextDirection.ltr, decoration: _dec(t('add_factory.nickname_placeholder'))),
+        TextField(
+          controller: _nickname,
+          textDirection: TextDirection.ltr,
+          maxLength: 20,
+          inputFormatters: [_NicknameFormatter()],
+          decoration: _dec(t('add_factory.nickname_placeholder')),
+        ),
         _l(t('add_factory.responsible_name_label')),
         TextField(controller: _responsible, decoration: _dec(t('add_factory.responsible_name_placeholder'))),
         _l(t('add_factory.commercial_reg_label')),
@@ -273,4 +281,13 @@ class _AddFactoryScreenState extends State<AddFactoryScreen> {
           Expanded(flex: 2, child: ElevatedButton(onPressed: _busy ? null : _submit, style: ElevatedButton.styleFrom(backgroundColor: AppColors.gold, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: _busy ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.dark)) : Text(t('add_factory.btn_submit', 'إضافة المصنع'), style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.dark)))),
         ]),
       ]);
+}
+
+/// Lowercases and turns anything outside a-z 0-9 _ into "_" while typing.
+class _NicknameFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]+'), '_');
+    return TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
+  }
 }

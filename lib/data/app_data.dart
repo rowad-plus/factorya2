@@ -8,6 +8,7 @@ import '../models/post_model.dart';
 import '../models/opportunity_model.dart';
 import '../services/api_client.dart';
 import '../services/l10n.dart';
+import '../services/phone_text.dart';
 
 /// Live data loaded from the Factorya API (replaces the old mock data).
 /// Lists are filled by [load] before the first frame and refreshed by [refresh].
@@ -508,7 +509,8 @@ class AppData {
     } else if (videos.isNotEmpty) {
       type = PostType.video;
     }
-    final text = tr(p, 'content');
+    // Phone numbers in post text stay left-to-right inside Arabic.
+    final text = ltrPhones(tr(p, 'content'));
     return PostModel(
       id: '${p['id']}',
       authorName: name.isEmpty ? 'مستخدم' : name,

@@ -9,6 +9,7 @@ import '../../widgets/shell_widgets.dart';
 import '../auth/login_modal.dart';
 import 'dash_kit.dart';
 import 'dash_sections.dart';
+import '../../services/phone_text.dart';
 
 /// Native factory dashboard (`/api/v1/factory-dashboard`): home with statistics, then every
 /// section of the site's Blade dashboard — locked ones (by package capability) show an upgrade notice.
@@ -181,7 +182,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('${q['name'] ?? ''}', style: GoogleFonts.tajawal(fontWeight: FontWeight.w800)),
-                      Text('${q['phone'] ?? ''} · ${q['email'] ?? ''}', style: GoogleFonts.tajawal(fontSize: 12, color: AppColors.muted)),
+                      Text(ltrPhones('${q['phone'] ?? ''} · ${q['email'] ?? ''}'), style: GoogleFonts.tajawal(fontSize: 12, color: AppColors.muted)),
                       Text('${q['details'] ?? ''}', maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 12.5, height: 1.5)),
                     ]),
                   ),

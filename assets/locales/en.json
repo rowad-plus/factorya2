@@ -550,7 +550,7 @@
     "opportunities_label": "Factory Opportunities & Options (Choose at least one)",
     "validation_username_req": "Username is required",
     "nickname_label": "Username",
-    "nickname_hint": "(English only, no spaces)",
+    "nickname_hint": "(English only, no spaces, up to 20 characters)",
     "nickname_placeholder": "Enter username...",
     "validation_nickname_req": "Username is required",
     "validation_password_min": "Password must be at least 6 characters",
@@ -602,7 +602,9 @@
       "livestock": "Livestock",
       "fisheries": "Fisheries",
       "other": "Other"
-    }
+    },
+    "validation_nickname_invalid": "Username is one word: lowercase English letters, digits and _ only",
+    "validation_nickname_max": "Username: 20 characters at most"
   },
   "prices": {
     "title": "Pricing Plans",

@@ -550,7 +550,7 @@
     "opportunities_label": "فرص واختيارات المصنع (يجب اختيار خيار واحد على الأقل)",
     "validation_username_req": "اسم المستخدم مطلوب",
     "nickname_label": "اسم المستخدم",
-    "nickname_hint": "(باللغة الانجليزية فقط وبدون مسافات)",
+    "nickname_hint": "(بالإنجليزية فقط، بدون مسافات، حتى 20 حرف)",
     "nickname_placeholder": "أدخل اسم المستخدم...",
     "validation_nickname_req": "اسم المستخدم مطلوب",
     "validation_password_min": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
@@ -602,7 +602,9 @@
       "livestock": "ثروة حيوانية",
       "fisheries": "مصايد أسماك",
       "other": "أخرى"
-    }
+    },
+    "validation_nickname_invalid": "اسم المستخدم كلمة واحدة: حروف إنجليزية صغيرة وأرقام و _ فقط",
+    "validation_nickname_max": "اسم المستخدم 20 حرف بحد أقصى"
   },
   "prices": {
     "title": "خطط الأسعار",

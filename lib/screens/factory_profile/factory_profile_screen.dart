@@ -19,6 +19,7 @@ import '../../widgets/post_card.dart';
 import '../../models/post_model.dart';
 import '../auth/login_modal.dart';
 import '../chat/chat_screen.dart';
+import '../../services/phone_text.dart';
 
 /// Factory profile — the website's "classic" design: header card, top tabs
 /// (About / Posts for featured factories / Contact) and, for featured factories,
@@ -947,7 +948,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                       style: GoogleFonts.tajawal(
                           fontSize: 12.5, color: AppColors.muted)),
                   TextSpan(
-                      text: value,
+                      text: ltrPhones(value),
                       style: GoogleFonts.tajawal(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -1226,7 +1227,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                   Text(label,
                       style: GoogleFonts.tajawal(
                           fontSize: 12, color: AppColors.muted)),
-                  Text(value,
+                  Text(ltrPhones(value),
                       style: GoogleFonts.tajawal(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
