@@ -198,7 +198,12 @@
       "رمز الدولة": "Country Code",
       "نبذة": "Summary"
     },
-    "for_factory": "for"
+    "for_factory": "for",
+    "featured_factory": "Featured factory",
+    "boost_featured": "Featured",
+    "boost_views": "Shown {n} times",
+    "boost_days_left": "{n} days left",
+    "boost_ended": "Featuring period ended"
   },
   "gates": {
     "search_placeholder": "Search for a factory...",

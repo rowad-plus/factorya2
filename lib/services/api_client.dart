@@ -30,12 +30,14 @@ class ApiClient {
 
   String? token;
   String locale = 'ar';
+  String? viewerId;
   void Function()? onUnauthorized;
 
   Map<String, String> get _headers => {
         'Accept': 'application/json',
         'Accept-Language': locale,
         if (token != null) 'Authorization': 'Bearer $token',
+        if (viewerId != null) 'X-Viewer-Id': viewerId!,
       };
 
   Uri _uri(String path, [Map<String, dynamic>? query]) {

@@ -197,7 +197,12 @@
       "رمز الدولة": "Country Code",
       "نبذة": "Özet"
     },
-    "for_factory": "–"
+    "for_factory": "–",
+    "featured_factory": "Öne çıkan fabrika",
+    "boost_featured": "Öne çıkan",
+    "boost_views": "{n} kez gösterildi",
+    "boost_days_left": "{n} gün kaldı",
+    "boost_ended": "Öne çıkarma süresi bitti"
   },
   "gates": {
     "search_placeholder": "Bir fabrika ara...",

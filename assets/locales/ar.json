@@ -198,7 +198,12 @@
       "رمز الدولة": "رمز الدولة",
       "نبذة": "نبذة"
     },
-    "for_factory": "لمصنع"
+    "for_factory": "لمصنع",
+    "featured_factory": "مصنع مميز",
+    "boost_featured": "مميز",
+    "boost_views": "اتعرض {n} مرة",
+    "boost_days_left": "متبقي {n} يوم",
+    "boost_ended": "انتهت مدة التمييز"
   },
   "gates": {
     "search_placeholder": "ابحث عن مصنع...",

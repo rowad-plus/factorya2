@@ -43,6 +43,9 @@ class _PostCardState extends State<PostCard> {
     super.initState();
     _liked = widget.post.isLiked;
     _likes = widget.post.likes;
+    // The list builds cards as they scroll into view, so a boosted post that
+    // gets built here has been shown; the backend counts it once per day.
+    if (widget.post.feedBoosted) AppData.recordImpression(widget.post.id);
   }
 
   @override
@@ -378,6 +381,31 @@ class _PostCardState extends State<PostCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Owner-only: how the boosted post is doing.
+                if (p.boostActive != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(color: const Color(0xFFFDF4E0), borderRadius: BorderRadius.circular(8)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.workspace_premium, size: 14, color: Color(0xFFD4A017)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            [
+                              t('post.boost_featured', 'مميز'),
+                              t('post.boost_views', 'اتعرض {n} مرة').replaceAll('{n}', '${p.boostImpressions}'),
+                              p.boostActive == true
+                                  ? t('post.boost_days_left', 'متبقي {n} يوم').replaceAll('{n}', '${p.boostDaysLeft}')
+                                  : t('post.boost_ended', 'انتهت مدة التمييز'),
+                            ].join(' · '),
+                            style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF7A5600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
@@ -394,7 +422,25 @@ class _PostCardState extends State<PostCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.4)),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: Text(name, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.4))),
+                              // Paid-package factory: small gold badge, never an "ad" label.
+                              if (p.isFeaturedFactory) ...[
+                                const SizedBox(width: 5),
+                                Tooltip(
+                                  message: t('post.featured_factory', 'مصنع مميز'),
+                                  child: Container(
+                                    width: 18,
+                                    height: 18,
+                                    decoration: const BoxDecoration(color: Color(0xFFFDF4E0), shape: BoxShape.circle),
+                                    child: const Icon(Icons.workspace_premium, size: 12, color: Color(0xFFD4A017)),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                           Text(p.time, style: GoogleFonts.tajawal(fontSize: 11.5, color: gray)),
                         ],
                       ),
