@@ -36,7 +36,7 @@
   },
   "nav": {
     "home": "Home",
-    "gates": "Gates",
+    "gates": "Sectors",
     "factories": "Factories",
     "sponsors": "Sponsors",
     "products_services": "Products",
@@ -62,7 +62,7 @@
     "important_links": "Important Links",
     "contact_us": "Contact Us",
     "follow_us": "Follow Us",
-    "about_us_default": "is your comprehensive platform for discovering factories, industrial and agricultural sectors, and their services in Egypt. Our goal is to connect manufacturers, suppliers, and customers in one place, providing an easy and fast search experience with accurate and updated information.",
+    "about_us_default": "is your comprehensive platform for discovering factories, industrial and agricultural sectors, and their services in Egypt, Saudi Arabia and Turkey. Our goal is to connect manufacturers, suppliers, and customers in one place, providing an easy and fast search experience with accurate and updated information.",
     "faq": "FAQs",
     "register": "Register"
   },
@@ -88,7 +88,7 @@
   },
   "home": {
     "no_posts": "No posts currently available",
-    "gates": "Gates",
+    "gates": "Sectors",
     "featured_factories": "Featured Factories",
     "latest_posts": "Latest Posts",
     "create_post_placeholder": "Create a post...",
@@ -105,7 +105,8 @@
     "agent_modal_subtitle": "Leave your details and we'll get back to you shortly",
     "agent_modal_opportunity_label": "Opportunity",
     "agent_modal_opportunity_placeholder": "Select an opportunity",
-    "agent_modal_message_placeholder": "Write your request details... (factory agency, a product you need, a cooperation opportunity)"
+    "agent_modal_message_placeholder": "Write your request details... (factory agency, a product you need, a cooperation opportunity)",
+    "page_title": "Factorya – Connecting Factories with Markets"
   },
   "post_modal": {
     "title": "Create Post",
@@ -196,7 +197,8 @@
       "اسم الفرع": "Branch Name",
       "رمز الدولة": "Country Code",
       "نبذة": "Summary"
-    }
+    },
+    "for_factory": "for"
   },
   "gates": {
     "search_placeholder": "Search for a factory...",
@@ -204,8 +206,8 @@
     "search_placeholder_product": "Search for a product...",
     "suggested_factories": "Suggested Factories",
     "search": "Search",
-    "gates_title": "Gates",
-    "gates_subtitle": "We offer you multiple gates and specializations in the industrial field to make it easier for you to reach the right factory.",
+    "gates_title": "Sectors",
+    "gates_subtitle": "We offer you multiple sectors and specializations in the industrial field to make it easier for you to reach the right factory.",
     "featured_factories": "Featured Factories",
     "opportunities": "Opportunities",
     "opportunities_subtitle": "We offer you various investment opportunities in the industrial field to make it easier for you to reach the right opportunity.",
@@ -222,10 +224,10 @@
   "sponsors_page": {
     "title_highlight": "Sponsors ",
     "title_and": "& Partners",
-    "subtitle": "Browse the list of certified sponsors and partners for the Factoria industrial platform and connect with them directly.",
+    "subtitle": "Browse the list of certified sponsors and partners for the Factorya industrial platform and connect with them directly.",
     "breadcrumb": "Sponsors & Partners",
     "sponsorship_packages": "Sponsorship Packages",
-    "registered_factories": "Registered Factories",
+    "registered_factories": "Sponsors",
     "join_title": "Would you like to be one of our sponsors?",
     "join_subtitle": "Join the list of success partners and benefit from growth and expansion opportunities with us.",
     "contact_now": "Contact Us Now"
@@ -327,12 +329,12 @@
   },
   "filter_sidebar": {
     "filter_title": "Filter",
-    "gates": "Gates",
+    "gates": "Sectors",
     "categories": "Categories",
     "opportunities": "Opportunities",
     "country": "Country",
     "city": "City",
-    "select_gate_first": "Please select a gate first",
+    "select_gate_first": "Please select a sector first",
     "select_country_first": "Please select a country first",
     "load_more": "Load more..."
   },
@@ -530,8 +532,8 @@
     "country_placeholder": "Select Country",
     "city_label": "City",
     "city_placeholder": "Select City",
-    "gates_label": "Gates",
-    "gates_placeholder": "Select Gate",
+    "gates_label": "Sectors",
+    "gates_placeholder": "Select Sector",
     "categories_label": "Categories",
     "categories_placeholder": "Select Category",
     "specialization_label": "Specialization",
@@ -557,7 +559,7 @@
     "validation_phone_req": "Phone Number is required",
     "validation_country_req": "Country is required",
     "validation_city_req": "City is required",
-    "validation_gate_req": "Gate is required",
+    "validation_gate_req": "Sector is required",
     "validation_category_req": "Category is required",
     "validation_description_req": "Factory Description is required",
     "validation_options_min": "Choose at least one option",

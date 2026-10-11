@@ -106,8 +106,8 @@ class _AboutScreenState extends State<AboutScreen> {
         ];
         final numbers = [
           ('${stats['total_factories_count'] ?? '—'}', t('about_page.stats_registered_factories')),
-          ('${stats['total_gates_count'] ?? '—'}', t('about_page.stats_industrial_sectors')),
-          ('${stats['subscribed_factories_count'] ?? '—'}', t('about_page.stats_featured_companies')),
+          ('${stats['total_gates_count'] ?? '—'}', t('factories_hero.stat_sectors')),
+          ('${stats['categories_count'] ?? '—'}', t('about_page.stats_industrial_sectors')),
           ('${stats['views_count'] ?? '—'}', t('about_page.stats_website_visits')),
         ];
         return ListView(
@@ -252,6 +252,16 @@ class _ContactScreenState extends State<ContactScreen> {
   String? _subject;
   bool _sending = false;
 
+  /// Dial code of the selected country (e.g. +20 for Egypt) instead of a fixed +966.
+  String get _dial => '${AppData.country?['phone_code'] ?? '+966'}';
+
+  /// The number as typed if it already has a +code, otherwise the dial code plus the number without its leading zero.
+  String get _fullPhone {
+    final raw = _phone.text.trim().replaceAll(' ', '');
+    if (raw.startsWith('+') || raw.startsWith('00')) return raw;
+    return '$_dial${raw.replaceFirst(RegExp(r'^0+'), '')}';
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -273,7 +283,7 @@ class _ContactScreenState extends State<ContactScreen> {
       await ApiClient.i.post('/contact', body: {
         'full_name': _name.text.trim(),
         'email': _email.text.trim(),
-        'phone_number': _phone.text.trim(),
+        'phone_number': _fullPhone,
         'subject': subject,
         'message': _message.text.trim(),
       });
@@ -325,7 +335,15 @@ class _ContactScreenState extends State<ContactScreen> {
                 _label(t('contact_page.email_label')),
                 TextField(controller: _email, keyboardType: TextInputType.emailAddress, textDirection: TextDirection.ltr, decoration: _dec(t('contact_page.email_placeholder'))),
                 _label(t('contact_page.phone_label')),
-                TextField(controller: _phone, keyboardType: TextInputType.phone, textDirection: TextDirection.ltr, decoration: _dec('+966...')),
+                TextField(
+                  controller: _phone,
+                  keyboardType: TextInputType.phone,
+                  textDirection: TextDirection.ltr,
+                  decoration: _dec('xxx xxxx xxxx').copyWith(
+                    prefixText: '$_dial  ',
+                    prefixStyle: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text),
+                  ),
+                ),
                 _label(t('contact_page.subject_label')),
                 DropdownButtonFormField<String>(
                   initialValue: _subject ?? subjects.first,

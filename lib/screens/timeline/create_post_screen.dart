@@ -116,7 +116,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   child: DropdownButtonFormField<int>(
                     initialValue: _sector,
                     isExpanded: true,
-                    decoration: InputDecoration(hintText: t('nav.gates', 'الأبواب'), contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+                    decoration: InputDecoration(hintText: t('nav.gates', 'القطاعات'), contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
                     items: [for (final d in AppData.doors) DropdownMenuItem(value: d['id'] as int, child: Text(d['name'] as String, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 13)))],
                     onChanged: (v) => setState(() => _sector = v),
                   ),

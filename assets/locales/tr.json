@@ -62,7 +62,7 @@
     "important_links": "Önemli Bağlantılar",
     "contact_us": "Bizimle İletişime Geçin",
     "follow_us": "Bizi Takip Edin",
-    "about_us_default": "Mısır'daki fabrikaları, endüstriyel ve tarımsal sektörleri ve hizmetlerini keşfetmek için kapsamlı platformunuzdur. Amacımız, üreticileri, tedarikçileri ve müşterileri tek bir yerde buluşturarak doğru ve güncel bilgilerle kolay ve hızlı bir arama deneyimi sunmaktır.",
+    "about_us_default": "Mısır, Suudi Arabistan ve Türkiye'deki fabrikaları, endüstriyel ve tarımsal sektörleri ve hizmetlerini keşfetmek için kapsamlı platformunuzdur. Amacımız, üreticileri, tedarikçileri ve müşterileri tek bir yerde buluşturarak doğru ve güncel bilgilerle kolay ve hızlı bir arama deneyimi sunmaktır.",
     "faq": "Sıkça Sorulan Sorular",
     "register": "Kayıt Ol"
   },
@@ -105,7 +105,8 @@
     "agent_modal_subtitle": "Bilgilerinizi bırakın, en kısa sürede size ulaşalım",
     "agent_modal_opportunity_label": "Fırsat",
     "agent_modal_opportunity_placeholder": "Bir fırsat seçin",
-    "agent_modal_message_placeholder": "Talebinizin ayrıntılarını yazın... (fabrika temsilciliği, aradığınız ürün, iş birliği fırsatı)"
+    "agent_modal_message_placeholder": "Talebinizin ayrıntılarını yazın... (fabrika temsilciliği, aradığınız ürün, iş birliği fırsatı)",
+    "page_title": "Factorya – Fabrikaları Pazarlarla Buluşturan Platform"
   },
   "post_modal": {
     "title": "Gönderi Oluştur",
@@ -195,7 +196,8 @@
       "اسم الفرع": "Branch Name",
       "رمز الدولة": "Country Code",
       "نبذة": "Özet"
-    }
+    },
+    "for_factory": "–"
   },
   "gates": {
     "search_placeholder": "Bir fabrika ara...",
@@ -221,10 +223,10 @@
   "sponsors_page": {
     "title_highlight": "Sponsorlar ",
     "title_and": "& Ortaklar",
-    "subtitle": "Factoria endüstriyel platformunun onaylı sponsor ve ortaklarının listesine göz atın ve onlarla doğrudan iletişime geçin.",
+    "subtitle": "Factorya endüstriyel platformunun onaylı sponsor ve ortaklarının listesine göz atın ve onlarla doğrudan iletişime geçin.",
     "breadcrumb": "Sponsorlar & Ortaklar",
     "sponsorship_packages": "Sponsorluk Paketleri",
-    "registered_factories": "Kayıtlı Fabrikalar",
+    "registered_factories": "Sponsorlar",
     "join_title": "Sponsorlarımızdan biri olmak ister misiniz?",
     "join_subtitle": "Başarı ortakları listesine katılın ve bizimle büyüme ve genişleme fırsatlarından yararlanın.",
     "contact_now": "Şimdi Bizimle İletişime Geçin"
@@ -539,8 +541,8 @@
     "partners": "Müşterilerimiz",
     "products": "Ürünlerimiz",
     "videos": "Videolar",
-    "contact": "Bizimle İletişime Geçin",
-    "activities": "Fabrika Faaliyetleri",
+    "contact": "İletişim",
+    "activities": "Aktiviteler",
     "catalog": "Katalog",
     "team": "Ekip Üyeleri"
   },
@@ -561,19 +563,6 @@
     "edit_image": "Profil Resmini Düzenle",
     "edit_name": "Adı Düzenle",
     "default_country": "Ülke belirtilmemiş"
-  },
-  "factory_tabs": {
-    "about": "Hakkımızda",
-    "posts": "Gönderiler",
-    "catalogs": "Kataloglar",
-    "branches": "Şubeler",
-    "partners": "Müşterilerimiz",
-    "products": "Ürünlerimiz",
-    "videos": "Videolar",
-    "contact": "İletişim",
-    "activities": "Aktiviteler",
-    "catalog": "Katalog",
-    "team": "Ekip Üyeleri"
   },
   "product_details": {
     "product_not_found": "Ürün bulunamadı",

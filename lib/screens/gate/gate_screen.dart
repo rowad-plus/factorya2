@@ -193,7 +193,7 @@ class _GateScreenState extends State<GateScreen> {
                       child: Row(children: [
                         const Icon(Icons.filter_alt_outlined, size: 18, color: AppColors.gold),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(_gateName.isEmpty ? t('home.gates', 'الأبواب') : _gateName, style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text))),
+                        Expanded(child: Text(_gateName.isEmpty ? t('home.gates', 'القطاعات') : _gateName, style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text))),
                         const Icon(Icons.keyboard_arrow_down, size: 20, color: Color(0xFF999999)),
                       ]),
                     ),

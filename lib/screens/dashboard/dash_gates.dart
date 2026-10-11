@@ -138,11 +138,11 @@ class _GatesCategoriesSectionState extends State<GatesCategoriesSection> {
   @override
   Widget build(BuildContext context) {
     return DashPage(
-      title: '${t('add_factory.gates_label', 'الأبواب')} / ${t('add_factory.categories_label', 'التصنيفات')}',
+      title: '${t('add_factory.gates_label', 'القطاعات')} / ${t('add_factory.categories_label', 'التصنيفات')}',
       child: _f == null
           ? (_error != null ? emptyState(_error!) : emptyState('', loading: true))
           : ListView(padding: const EdgeInsets.all(14), children: [
-              Text(t('add_factory.gates_label', 'الأبواب'), style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800)),
+              Text(t('add_factory.gates_label', 'القطاعات'), style: GoogleFonts.tajawal(fontSize: 15, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
               Wrap(spacing: 8, runSpacing: 8, children: [
                 for (final d in AppData.doors)

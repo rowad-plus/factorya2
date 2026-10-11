@@ -499,7 +499,7 @@ class AppBottomNav extends StatelessWidget {
             : 0;
         final items = [
           (Icons.home_outlined, t('nav.home', 'الرئيسية')),
-          (Icons.grid_view, t('nav.gates', 'الأبواب')),
+          (Icons.grid_view, t('nav.gates', 'القطاعات')),
           (Icons.chat_bubble_outline, t('chat.title', 'الرسائل')),
           (Icons.more_horiz, t('nav.more', 'المزيد')),
         ];

@@ -53,7 +53,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   onSubmit: (q) => context.push('/companies?search=${Uri.encodeQueryComponent(q.trim())}'),
                 ),
               ),
-              SmallHeader(title: t('gates.gates_title', 'الأبواب'), subTitle: t('gates.gates_subtitle'), bgColor: AppColors.gold3),
+              SmallHeader(title: t('gates.gates_title', 'القطاعات'), subTitle: t('gates.gates_subtitle'), bgColor: AppColors.gold3),
               if (doors.isEmpty)
                 Padding(padding: const EdgeInsets.all(32), child: Center(child: Text(AppData.loaded ? t('gates.no_data') : '...', style: GoogleFonts.tajawal(color: AppColors.muted))))
               else

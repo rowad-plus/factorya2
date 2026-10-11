@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
       child: SiteSidePost(
-        title: t('home.gates', 'الأبواب'),
+        title: t('home.gates', 'القطاعات'),
         loading: !AppData.loaded,
         items: AppData.doors
             .map((d) => SwiperItem(title: (d['name'] ?? d['short'] ?? '') as String, imageUrl: d['image'] as String?, onTap: () => _openGate(d)))

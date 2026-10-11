@@ -363,7 +363,7 @@ class _FilterSheetState extends State<_FilterSheet> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _title(t('nav.gates', 'الأبواب')),
+                  _title(t('nav.gates', 'القطاعات')),
                   Wrap(spacing: 8, runSpacing: 8, children: [
                     for (final d in AppData.doors)
                       _chip(d['name'] as String, _gate == d['id'], () {
