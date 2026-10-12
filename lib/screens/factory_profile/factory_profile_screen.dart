@@ -47,10 +47,29 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
 
   String get _id => widget.factory.id;
 
+  bool _wasLoggedIn = AuthService.i.isLoggedIn;
+
   @override
   void initState() {
     super.initState();
     _load();
+    AuthService.i.addListener(_onAuthChanged);
+  }
+
+  @override
+  void dispose() {
+    AuthService.i.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
+  /// Logging in from this page (e.g. the "login to call" button) must reveal
+  /// the real phone/email: the API masks them for guests, so reload the
+  /// factory with the new token instead of keeping the guest copy.
+  void _onAuthChanged() {
+    final now = AuthService.i.isLoggedIn;
+    if (now == _wasLoggedIn) return;
+    _wasLoggedIn = now;
+    if (mounted) _load();
   }
 
   Color? _hex(dynamic v) {
