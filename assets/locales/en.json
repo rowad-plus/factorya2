@@ -106,7 +106,10 @@
     "agent_modal_opportunity_label": "Opportunity",
     "agent_modal_opportunity_placeholder": "Select an opportunity",
     "agent_modal_message_placeholder": "Write your request details... (factory agency, a product you need, a cooperation opportunity)",
-    "page_title": "Factorya – Connecting Factories with Markets"
+    "page_title": "Factorya – Connecting Factories with Markets",
+    "recently_added": "Recently Added",
+    "new_badge": "New",
+    "no_recent_factories": "No factories yet"
   },
   "post_modal": {
     "title": "Create Post",

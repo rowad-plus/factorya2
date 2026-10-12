@@ -107,7 +107,10 @@
     "agent_modal_opportunity_label": "الفرصة",
     "agent_modal_opportunity_placeholder": "اختر الفرصة",
     "agent_modal_message_placeholder": "اكتب تفاصيل طلبك... (وكالة مصنع، منتج تبحث عنه، فرصة تعاون)",
-    "page_title": "Factorya – منصة ربط المصانع بالأسواق"
+    "page_title": "Factorya – منصة ربط المصانع بالأسواق",
+    "recently_added": "المضاف حديثاً",
+    "new_badge": "جديد",
+    "no_recent_factories": "لا توجد مصانع حالياً"
   },
   "post_modal": {
     "title": "إنشاء منشور",

@@ -106,7 +106,10 @@
     "agent_modal_opportunity_label": "Fırsat",
     "agent_modal_opportunity_placeholder": "Bir fırsat seçin",
     "agent_modal_message_placeholder": "Talebinizin ayrıntılarını yazın... (fabrika temsilciliği, aradığınız ürün, iş birliği fırsatı)",
-    "page_title": "Factorya – Fabrikaları Pazarlarla Buluşturan Platform"
+    "page_title": "Factorya – Fabrikaları Pazarlarla Buluşturan Platform",
+    "recently_added": "Yeni Eklenenler",
+    "new_badge": "Yeni",
+    "no_recent_factories": "Henüz fabrika yok"
   },
   "post_modal": {
     "title": "Gönderi Oluştur",

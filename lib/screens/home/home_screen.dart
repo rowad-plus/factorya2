@@ -9,6 +9,7 @@ import '../../widgets/home_swiper.dart';
 import 'package:go_router/go_router.dart';
 import '../opportunities/create_opportunity_screen.dart';
 import '../../widgets/post_card.dart';
+import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
 import '../../services/l10n.dart';
 import '../auth/login_modal.dart';
@@ -38,11 +39,53 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scroll = ScrollController();
   List<Map<String, dynamic>> _banners = [];
 
+  // Feed tabs: latest posts | recently added factories (same as the website home).
+  String _feedTab = 'posts';
+  final List<Map<String, dynamic>> _recent = [];
+  int _recentPage = 0;
+  int _recentLastPage = 1;
+  bool _recentLoading = false;
+  int? _recentCountry;
+
+  /// GET /factories/recently-added for the chosen country (+ cross-country paid factories).
+  Future<void> _loadRecent({bool reset = false}) async {
+    if (_recentLoading) return;
+    if (reset) {
+      _recent.clear();
+      _recentPage = 0;
+      _recentLastPage = 1;
+    }
+    if (_recentPage >= _recentLastPage) return;
+    setState(() => _recentLoading = true);
+    try {
+      _recentCountry = AppData.countryId;
+      final res = await ApiClient.i.get('/factories/recently-added', query: {
+        'country_id': AppData.countryId,
+        'page': _recentPage + 1,
+        'per_page': 12,
+      });
+      final meta = res['meta'];
+      if (meta is Map) _recentLastPage = (meta['last_page'] as num?)?.toInt() ?? _recentPage + 1;
+      _recent.addAll(ApiClient.list(res['data']).map((e) => Map<String, dynamic>.from(e as Map)));
+      _recentPage++;
+    } catch (_) {
+      _recentLastPage = _recentPage; // stop paging on error
+    }
+    if (mounted) setState(() => _recentLoading = false);
+  }
+
+  void _selectFeedTab(String tab) {
+    setState(() => _feedTab = tab);
+    if (tab == 'recent' && (_recent.isEmpty || _recentCountry != AppData.countryId)) _loadRecent(reset: true);
+  }
+
   @override
   void initState() {
     super.initState();
     _scroll.addListener(() {
-      if (_scroll.position.extentAfter < 1200) AppData.loadMorePosts();
+      if (_scroll.position.extentAfter < 1200) {
+        _feedTab == 'recent' ? _loadRecent() : AppData.loadMorePosts();
+      }
     });
     // Same banners the website shows between timeline posts.
     AppData.fetchBanners('timeline').then((b) {
@@ -84,7 +127,37 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildFeedTabs() {
+    Widget tab(String key, String label) {
+      final active = _feedTab == key;
+      return InkWell(
+        onTap: () => _selectFeedTab(key),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: active ? AppColors.gold : Colors.transparent, width: 2))),
+          child: Text(label, style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: active ? AppColors.text : AppColors.muted)),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 16, 12, 4),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB)))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          tab('posts', t('home.latest_posts', 'أحدث المنشورات')),
+          tab('recent', t('home.recently_added', 'المضاف حديثاً')),
+        ],
+      ),
+    );
+  }
+
   Widget _buildScaffold() {
+    // The visitor switched country while the tab is open: reload its list.
+    if (_feedTab == 'recent' && _recentCountry != null && _recentCountry != AppData.countryId && !_recentLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadRecent(reset: true));
+    }
     final feed = _feed();
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -102,12 +175,26 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverToBoxAdapter(child: _buildAgentBanner()),
               SliverToBoxAdapter(child: _buildDoorsSection()),
               SliverToBoxAdapter(child: _buildFactoriesSlider()),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
-                  child: Text(t('home.latest_posts', 'أحدث المنشورات'), style: GoogleFonts.tajawal(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text)),
+              SliverToBoxAdapter(child: _buildFeedTabs()),
+              if (_feedTab == 'recent') ...[
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (ctx, i) => _RecentFactoryCard(factory: _recent[i]),
+                    childCount: _recent.length,
+                  ),
                 ),
-              ),
+                if (_recentLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: AppColors.gold))),
+                  ),
+                if (!_recentLoading && _recent.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Center(child: Text(t('home.no_recent_factories', 'لا توجد مصانع حالياً'), style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted))),
+                    ),
+                  ),
+              ] else ...[
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (ctx, i) => feed[i],
@@ -128,6 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+              ],
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
             ],
           ),
@@ -362,6 +450,87 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           if (list.length == 1) const Expanded(child: SizedBox()),
         ],
+      ),
+    );
+  }
+}
+
+/// One factory in the "Recently added" tab (same card as the website).
+class _RecentFactoryCard extends StatelessWidget {
+  final Map<String, dynamic> factory;
+  const _RecentFactoryCard({required this.factory});
+
+  static String _flag(String? code) => code == null || code.length != 2
+      ? ''
+      : String.fromCharCodes(code.toUpperCase().codeUnits.map((c) => 127397 + c));
+
+  @override
+  Widget build(BuildContext context) {
+    final f = factory;
+    final name = '${f['name'] ?? ''}';
+    final gate = f['gate'] is Map ? '${(f['gate'] as Map)['name'] ?? ''}' : '';
+    final category = f['category'] is Map ? '${(f['category'] as Map)['name'] ?? ''}' : '';
+    final country = f['country'] is Map ? Map<String, dynamic>.from(f['country'] as Map) : const <String, dynamic>{};
+    final foreign = country['id'] != null && country['id'] != AppData.countryId;
+    final place = [
+      if ('${f['city'] ?? ''}'.isNotEmpty) '${f['city']}',
+      if (foreign) '${_flag(country['code'] as String?)} ${country['name'] ?? ''}'.trim(),
+    ].join(' · ');
+    final featured = f['is_featured_factory'] == true;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => context.push('/factory/${f['id']}'),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: featured ? const Color(0xFFF3D58A) : const Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              children: [
+                SiteAvatar(url: f['logo'] as String?, name: name, size: 52, isFactory: true),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
+                          if (featured)
+                            Container(
+                              width: 18,
+                              height: 18,
+                              decoration: const BoxDecoration(color: Color(0xFFFDF4E0), shape: BoxShape.circle),
+                              child: const Icon(Icons.workspace_premium, size: 12, color: Color(0xFFD4A017)),
+                            ),
+                          if (f['is_new'] == true)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                              decoration: BoxDecoration(color: const Color(0xFFECFDF3), borderRadius: BorderRadius.circular(20)),
+                              child: Text(t('home.new_badge', 'جديد'), style: GoogleFonts.tajawal(fontSize: 10.5, fontWeight: FontWeight.w700, color: const Color(0xFF067647))),
+                            ),
+                        ],
+                      ),
+                      if (gate.isNotEmpty)
+                        Text(category.isNotEmpty ? '$gate · $category' : gate, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 12.5, color: AppColors.muted)),
+                      if (place.isNotEmpty)
+                        Text(place, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 12, color: AppColors.muted)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
