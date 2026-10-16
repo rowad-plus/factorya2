@@ -14,6 +14,8 @@ workflows:
     integrations:
       app_store_connect: Factorya ASC
     environment:
+      groups:
+        - ios_signing
       flutter: 3.44.8
       xcode: latest
       cocoapods: default
