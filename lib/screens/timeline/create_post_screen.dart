@@ -122,6 +122,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ),
                 ),
               ]),
+              const SizedBox(height: 12),
+              Text(
+                L10n.i.lang == 'ar'
+                    ? 'يُمنع نشر أي محتوى مسيء أو مخالف. يراجع فريقنا البلاغات خلال 24 ساعة ويحذف المحتوى المخالف ويطرد صاحبه.'
+                    : (L10n.i.lang == 'tr'
+                        ? 'Uygunsuz içerik yayınlamak yasaktır. Ekibimiz bildirimleri 24 saat içinde inceler, ihlal eden içeriği kaldırır ve sahibini çıkarır.'
+                        : 'Objectionable content is prohibited. We review reports within 24 hours, remove violating content and eject its author.'),
+                style: GoogleFonts.tajawal(fontSize: 12, color: AppColors.muted, height: 1.6),
+              ),
             ]),
           ),
         ]),

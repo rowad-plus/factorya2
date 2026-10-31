@@ -95,7 +95,7 @@ class _PostCardState extends State<PostCard> {
       final res = await ApiClient.i.get('/posts/${widget.post.id}/comments', query: {'per_page': 50});
       final loaded = ApiClient.list(res['data']).map((c) {
         final u = c['user'] is Map ? Map<String, dynamic>.from(c['user'] as Map) : <String, dynamic>{};
-        return {'name': (u['name'] as String?) ?? t('post.default_user', 'مستخدم'), 'text': AppData.tr(c, 'content')};
+        return {'id': '${c['id'] ?? ''}', 'user_id': '${u['id'] ?? ''}', 'name': (u['name'] as String?) ?? t('post.default_user', 'مستخدم'), 'text': AppData.tr(c, 'content')};
       }).toList();
       if (mounted) {
         setState(() {
@@ -126,6 +126,114 @@ class _PostCardState extends State<PostCard> {
     } on ApiException catch (e) {
       if (mounted) showAppToast(context, '⚠️ ${e.message}');
     }
+  }
+
+  bool get _isOwnPost => '${AuthService.i.userId ?? ''}' == widget.post.authorId;
+
+  bool _canBlock(String userId) => userId.isNotEmpty && userId != '0' && userId != '${AuthService.i.userId ?? ''}';
+
+  /// Asks for a reason. Returns null when the sheet is dismissed.
+  Future<String?> _pickReason() {
+    final reasons = [
+      tri('محتوى مسيء أو غير لائق', 'Rahatsız edici veya uygunsuz içerik', 'Offensive or inappropriate content'),
+      tri('تحرش أو إساءة', 'Taciz veya kötüye kullanım', 'Harassment or abuse'),
+      tri('احتيال أو رسائل مزعجة', 'Dolandırıcılık veya spam', 'Scam or spam'),
+      tri('سبب آخر', 'Diğer', 'Other'),
+    ];
+    return showModalBottomSheet<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(tri('سبب الإبلاغ', 'Bildirme nedeni', 'Why are you reporting this?'), style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w800)),
+          ),
+          for (final r in reasons)
+            ListTile(title: Text(r, style: GoogleFonts.tajawal(fontSize: 14)), onTap: () => Navigator.pop(ctx, r)),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _safetyAction(Future<void> Function() action, String done) async {
+    try {
+      await action();
+      if (mounted) showAppToast(context, done);
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, '⚠️ ${e.message}');
+    }
+  }
+
+  Future<void> _reportPost() async {
+    if (!_requireLogin()) return;
+    final reason = await _pickReason();
+    if (reason == null) return;
+    await _safetyAction(
+      () => AppData.reportPost(widget.post.id, reason),
+      tri('تم استلام بلاغك وإخفاء المنشور، وسنراجعه خلال 24 ساعة', 'Bildiriminiz alındı ve gönderi gizlendi; 24 saat içinde incelenecek', 'Report received. The post is hidden and will be reviewed within 24 hours'),
+    );
+  }
+
+  Future<void> _blockAuthor(String userId, String name, {String? postId}) async {
+    if (!_requireLogin()) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        title: Text(tri('حظر $name؟', '$name engellensin mi?', 'Block $name?'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w800)),
+        content: Text(tri('سيختفي كل محتواه من صفحتك فوراً وسيتم إبلاغ إدارة فاكتوريا.', 'Tüm içeriği akışınızdan hemen kaldırılacak ve Factorya yönetimi bilgilendirilecek.', 'All their content will disappear from your feed immediately and the Factorya team will be notified.'), style: GoogleFonts.tajawal(height: 1.6)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tri('إلغاء', 'İptal', 'Cancel'))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tri('حظر', 'Engelle', 'Block'), style: const TextStyle(color: AppColors.red))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await _safetyAction(
+      () => AppData.blockUser(userId, postId: postId),
+      tri('تم حظر المستخدم', 'Kullanıcı engellendi', 'User blocked'),
+    );
+  }
+
+  Future<void> _reportComment(Map<String, String> c) async {
+    if (!_requireLogin()) return;
+    final reason = await _pickReason();
+    if (reason == null) return;
+    await _safetyAction(() => AppData.reportComment(c['id']!, reason), tri('تم استلام بلاغك', 'Bildiriminiz alındı', 'Report received'));
+    if (mounted) setState(() => _comments.remove(c));
+  }
+
+  void _commentMenu(Map<String, String> c) {
+    final userId = c['user_id'] ?? '';
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.flag_outlined, color: AppColors.red),
+            title: Text(tri('الإبلاغ عن التعليق', 'Yorumu bildir', 'Report comment'), style: GoogleFonts.tajawal(fontSize: 14)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _reportComment(c);
+            },
+          ),
+          if (_canBlock(userId))
+            ListTile(
+              leading: const Icon(Icons.block, color: AppColors.red),
+              title: Text(tri('حظر ${c['name']}', '${c['name']} engelle', 'Block ${c['name']}'), style: GoogleFonts.tajawal(fontSize: 14)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _blockAuthor(userId, c['name'] ?? '');
+                if (AppData.hiddenAuthorIds.contains(userId) && mounted) {
+                  setState(() => _comments.removeWhere((x) => x['user_id'] == userId));
+                }
+              },
+            ),
+        ]),
+      ),
+    );
   }
 
   void _openFactory() {
@@ -360,7 +468,15 @@ class _PostCardState extends State<PostCard> {
       );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder<int>(
+        valueListenable: AppData.safetyVersion,
+        builder: (_, __, ___) {
+          final hidden = AppData.hiddenPostIds.contains(widget.post.id) || AppData.hiddenAuthorIds.contains(widget.post.authorId);
+          return hidden ? const SizedBox.shrink() : _card(context);
+        },
+      );
+
+  Widget _card(BuildContext context) {
     final p = widget.post;
     final name = cleanName(p.authorName).isEmpty ? t('post.default_user', 'مستخدم') : cleanName(p.authorName);
     const gray = Color(0xFF667085);
@@ -445,6 +561,18 @@ class _PostCardState extends State<PostCard> {
                         ],
                       ),
                     ),
+                    if (!_isOwnPost)
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, size: 20, color: gray),
+                        padding: EdgeInsets.zero,
+                        tooltip: tri('خيارات', 'Seçenekler', 'Options'),
+                        onSelected: (v) => v == 'report' ? _reportPost() : _blockAuthor(p.authorId, name, postId: p.id),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(value: 'report', child: Text(tri('الإبلاغ عن المنشور', 'Gönderiyi bildir', 'Report post'), style: GoogleFonts.tajawal(fontSize: 14))),
+                          if (_canBlock(p.authorId))
+                            PopupMenuItem(value: 'block', child: Text(tri('حظر الناشر', 'Yazarı engelle', 'Block author'), style: GoogleFonts.tajawal(fontSize: 14, color: AppColors.red))),
+                        ],
+                      ),
                   ],
                   ),
                 ),
@@ -484,7 +612,11 @@ class _PostCardState extends State<PostCard> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(c['name']!, style: GoogleFonts.tajawal(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                                    Row(children: [
+                                      Expanded(child: Text(c['name']!, style: GoogleFonts.tajawal(fontSize: 11.5, fontWeight: FontWeight.w700))),
+                                      if ((c['id'] ?? '').isNotEmpty && c['user_id'] != '${AuthService.i.userId ?? ''}')
+                                        GestureDetector(onTap: () => _commentMenu(c), child: const Icon(Icons.more_horiz, size: 18, color: gray)),
+                                    ]),
                                     Text(c['text']!, style: GoogleFonts.tajawal(fontSize: 12, color: const Color(0xFF444444))),
                                   ],
                                 ),

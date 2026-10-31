@@ -564,6 +564,27 @@ class AppData {
     return out;
   }
 
+  /// Posts and authors the user reported or blocked this session; cards hide at once.
+  /// The server hides them on every later load.
+  static final safetyVersion = ValueNotifier<int>(0);
+  static final Set<String> hiddenPostIds = {};
+  static final Set<String> hiddenAuthorIds = {};
+
+  static Future<void> reportPost(String postId, String reason) async {
+    await _api.post('/posts/$postId/report', body: {'reason': reason});
+    hiddenPostIds.add(postId);
+    safetyVersion.value++;
+  }
+
+  static Future<void> reportComment(String commentId, String reason) =>
+      _api.post('/comments/$commentId/report', body: {'reason': reason});
+
+  static Future<void> blockUser(String userId, {String? postId}) async {
+    await _api.post('/users/$userId/block', body: {if (postId != null) 'post_id': postId});
+    hiddenAuthorIds.add(userId);
+    safetyVersion.value++;
+  }
+
   /// Report that a boosted post was shown (counted once per viewer per day by the backend).
   static Future<void> recordImpression(String postId) async {
     try {

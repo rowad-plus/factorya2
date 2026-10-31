@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
+import '../opportunities/opportunities_screen.dart' show tri;
 
 /// Passwordless sign-in like the website: phone → 4-digit OTP; register (name, phone) → OTP.
 class LoginModal {
@@ -38,6 +39,7 @@ class _AuthSheetState extends State<_AuthSheet> {
   final _code = TextEditingController();
   bool _busy = false;
   bool _signup = false;
+  bool _agreed = false;
   int _timer = 0;
   Timer? _ticker;
 
@@ -101,7 +103,10 @@ class _AuthSheetState extends State<_AuthSheet> {
     return ok;
   }
 
+  String get _mustAgree => tri('يجب الموافقة على شروط الاستخدام أولاً', 'Önce kullanım koşullarını kabul etmelisiniz', 'You must agree to the Terms of Use first');
+
   Future<void> _login() => _run(() async {
+        if (!_need(_agreed, _mustAgree)) return;
         if (!_need(_phone.text.trim().length >= 7, t('login_page.validation_phone_invalid', 'رقم الهاتف غير صالح'))) return;
         String? firstMessage;
         String? otherMessage;
@@ -127,6 +132,7 @@ class _AuthSheetState extends State<_AuthSheet> {
       });
 
   Future<void> _register() => _run(() async {
+        if (!_need(_agreed, _mustAgree)) return;
         if (!_need(_name.text.trim().isNotEmpty, t('add_factory.validation_responsible_name_req', 'الاسم مطلوب'))) return;
         if (!_need(_phone.text.trim().length >= 7, t('login_page.validation_phone_invalid', 'رقم الهاتف غير صالح'))) return;
         _matched = _full;
@@ -177,6 +183,69 @@ class _AuthSheetState extends State<_AuthSheet> {
         decoration: _dec('5XXXXXXXX', prefix: '$_dial  '),
       );
 
+  void _showTerms() {
+    final body = tri(
+      'باستخدامك تطبيق فاكتوريا فإنك توافق على ما يلي:\n\n'
+          '• لا تسامح إطلاقاً مع المحتوى المسيء أو المستخدمين المسيئين.\n'
+          '• يُمنع نشر أي محتوى مهين أو تحريضي أو إباحي أو عنصري أو احتيالي أو مخالف للقانون، ويُمنع التحرش بالآخرين.\n'
+          '• يمكنك الإبلاغ عن أي منشور أو تعليق وحظر أي مستخدم من قائمة ⋮.\n'
+          '• تراجع الإدارة البلاغات خلال 24 ساعة، وتحذف المحتوى المخالف وتطرد صاحبه من الخدمة.\n'
+          '• أنت مسؤول عن كل ما تنشره في التطبيق.',
+      'Factorya uygulamasını kullanarak aşağıdakileri kabul edersiniz:\n\n'
+          '• Uygunsuz içeriğe ve kötü niyetli kullanıcılara karşı sıfır tolerans uygulanır.\n'
+          '• Hakaret, kışkırtma, müstehcenlik, ırkçılık, dolandırıcılık veya yasa dışı içerik yayınlamak ve başkalarını taciz etmek yasaktır.\n'
+          '• Herhangi bir gönderiyi veya yorumu ⋮ menüsünden bildirebilir, herhangi bir kullanıcıyı engelleyebilirsiniz.\n'
+          '• Yönetim bildirimleri 24 saat içinde inceler, ihlal eden içeriği kaldırır ve sahibini hizmetten çıkarır.\n'
+          '• Yayınladığınız her şeyden siz sorumlusunuz.',
+      'By using the Factorya app you agree to the following:\n\n'
+          '• There is no tolerance for objectionable content or abusive users.\n'
+          '• Posting offensive, hateful, sexual, fraudulent or illegal content, or harassing others, is prohibited.\n'
+          '• You can report any post or comment and block any user from the ⋮ menu.\n'
+          '• We review reports within 24 hours, remove violating content and eject the user who posted it.\n'
+          '• You are responsible for everything you post in the app.',
+    );
+    showDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => AlertDialog(
+        title: Text(tri('شروط الاستخدام', 'Kullanım Koşulları', 'Terms of Use'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w800)),
+        content: SingleChildScrollView(child: Text(body, style: GoogleFonts.tajawal(fontSize: 14, height: 1.7))),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() => _agreed = true);
+            },
+            child: Text(tri('أوافق', 'Kabul ediyorum', 'I agree'), style: GoogleFonts.tajawal(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _terms() => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Checkbox(value: _agreed, activeColor: AppColors.gold, visualDensity: VisualDensity.compact, onChanged: (v) => setState(() => _agreed = v == true)),
+          Expanded(
+            child: GestureDetector(
+              onTap: _showTerms,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: tri('أوافق على ', 'Şunu kabul ediyorum: ', 'I agree to the ')),
+                    TextSpan(text: tri('شروط الاستخدام', 'Kullanım Koşulları', 'Terms of Use'), style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.w800, decoration: TextDecoration.underline)),
+                    TextSpan(text: tri('، ولا تسامح مع المحتوى المسيء أو المستخدمين المسيئين.', '. Uygunsuz içeriğe ve kötü niyetli kullanıcılara tolerans gösterilmez.', '. There is no tolerance for objectionable content or abusive users.')),
+                  ]),
+                  style: GoogleFonts.tajawal(fontSize: 12.5, height: 1.6, color: AppColors.text),
+                ),
+              ),
+            ),
+          ),
+        ]),
+      );
+
   Widget _btn(String label, VoidCallback? onTap) => Padding(
         padding: const EdgeInsets.only(top: 20),
         child: SizedBox(
@@ -209,6 +278,7 @@ class _AuthSheetState extends State<_AuthSheet> {
           Text(t('login_page.login_to_your_account', 'تسجيل الدخول إلى حسابك'), style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted)),
           _label(t('login_page.phone_label', 'رقم الهاتف')),
           _phoneField(),
+          _terms(),
           _btn(t('verify_otp_page.send_code', 'إرسال رمز التحقق'), _login),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Text(t('login_page.no_account', 'ليس لديك حساب؟'), style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted)),
@@ -224,6 +294,7 @@ class _AuthSheetState extends State<_AuthSheet> {
           _phoneField(),
           _label(t('add_factory.email_label', 'البريد الإلكتروني')),
           TextField(controller: _email, keyboardType: TextInputType.emailAddress, textDirection: TextDirection.ltr, decoration: _dec('example@mail.com')),
+          _terms(),
           _btn(t('login_page.register_now', 'سجل الآن'), _register),
           _link(t('login_page.login', 'تسجيل الدخول'), () => setState(() => _step = _Step.login)),
         ];
