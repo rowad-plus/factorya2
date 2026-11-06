@@ -192,7 +192,7 @@ class AppData {
   }
 
   static Future<void> _loadFeatured() async {
-    final res = await _api.get('/factories/imported-by-subscriptions');
+    final res = await _api.get('/factories/imported-by-subscriptions', query: {'country_id': countryId});
     final data = res['data'];
     final raw = data is Map ? data['factories'] : data;
     featured = ApiClient.list(raw).map(factoryFromJson).toList();
@@ -455,10 +455,30 @@ class AppData {
   }
 
   /// Avatar of a post author (`/users/{id}/image` when the user has an image).
+  /// Same order as the site's getUserAvatar: image_url, avatar_url, factory logo, own logo, image, avatar.
   static String userImageUrl(Map<String, dynamic> user) {
-    final img = user['image'];
-    if (img is String && img.startsWith('http')) return img;
-    if (img is String && img.isNotEmpty) return '${ApiClient.host}/api/users/${user['id']}/image';
+    final factory = user['factory'] is Map ? Map<String, dynamic>.from(user['factory'] as Map) : const <String, dynamic>{};
+    String full(dynamic v, String apiPath) {
+      if (v is! String || v.trim().isEmpty || v == 'null') return '';
+      if (v.startsWith('http')) return v;
+      return apiPath;
+    }
+    for (final v in [user['image_url'], user['avatar_url']]) {
+      final u = full(v, '');
+      if (u.isNotEmpty) return u;
+    }
+    for (final v in [factory['logo_url'], factory['logo_path'], factory['logo']]) {
+      final u = full(v, factory['id'] != null ? '${ApiClient.host}/api/factories/${factory['id']}/logo' : '${ApiClient.host}/storage/$v');
+      if (u.isNotEmpty) return u;
+    }
+    for (final v in [user['logo_path'], user['logo']]) {
+      final u = full(v, user['factory_id'] != null ? '${ApiClient.host}/api/factories/${user['factory_id']}/logo' : '${ApiClient.host}/storage/$v');
+      if (u.isNotEmpty) return u;
+    }
+    for (final v in [user['image'], user['avatar']]) {
+      final u = full(v, '${ApiClient.host}/api/users/${user['id']}/image');
+      if (u.isNotEmpty) return u;
+    }
     return '';
   }
 
