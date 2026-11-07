@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../widgets/verification_badge.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/app_data.dart';
 import '../../services/auth_service.dart';
@@ -89,7 +90,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         const SizedBox(width: 12),
                         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Row(children: [
-                            Expanded(child: Text(m['name'] as String, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w800))),
+                            Expanded(child: NameWithBadge(name: m['name'] as String, level: m['badge'], maxLines: 1, badgeSize: 14, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w800))),
+                            if (m['priority'] == true)
+                              Container(
+                                margin: const EdgeInsetsDirectional.only(end: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                                decoration: BoxDecoration(color: const Color(0xFFFDF4E0), borderRadius: BorderRadius.circular(20)),
+                                child: Text(t('chat.priority', 'أولوية'), style: GoogleFonts.tajawal(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFFB7791F))),
+                              ),
                             Text('${m['time']}', style: GoogleFonts.tajawal(fontSize: 11, color: AppColors.muted)),
                           ]),
                           Text('${m['preview']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 12.5, color: AppColors.muted)),

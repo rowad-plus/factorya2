@@ -295,6 +295,8 @@ class AppData {
         'unread': (c['unread_count'] as num?)?.toInt() ?? 0,
         'factoryId': '${f['id'] ?? ''}',
         'logo': logoUrl(f),
+        'badge': '${f['verification_badge'] ?? ''}',
+        'priority': c['is_priority'] == true,
       };
     }).toList();
   }
@@ -448,6 +450,7 @@ class AppData {
       nickname: (f['nickname'] as String?) ?? id,
       logoUrl: logoUrl(f),
       subscriptionType: sub,
+      verificationBadge: '${f['verification_badge'] ?? ''}',
       country: tr(map(f['country']), 'name'),
       viewsCount: (f['views_count'] as num?)?.toInt() ?? 0,
       productsCount: (f['products_count'] as num?)?.toInt() ?? 0,

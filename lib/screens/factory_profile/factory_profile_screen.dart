@@ -11,6 +11,8 @@ import '../../models/factory_model.dart';
 import '../../services/api_client.dart';
 import '../../services/auth_service.dart';
 import '../../services/l10n.dart';
+import '../../widgets/verification_badge.dart';
+import '../../widgets/similar_factories.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/net_image.dart';
@@ -163,6 +165,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                               if (_tab == 0) _aboutTab(f),
                               if (_tab == 1 && _featured) _postsTab(f),
                               if (_tab == (_featured ? 2 : 1)) _contactTab(f),
+                              SimilarFactories(factoryId: _id),
                               const SizedBox(height: 24),
                             ],
                           ),
@@ -335,7 +338,10 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                             style: const TextStyle(fontSize: 20)),
                       ]),
                       const SizedBox(height: 6),
-                      Text(_name,
+                      NameWithBadge(
+                          name: _name,
+                          level: f['verification_badge'],
+                          badgeSize: 20,
                           style: GoogleFonts.tajawal(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -667,6 +673,7 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
           Transform.translate(offset: Offset(0, _version != 6 && _cover.isNotEmpty ? -30 : 0), child: hero()),
           if (_version != 6) tabBar(),
           Container(color: _version == 6 ? const Color(0xFFF7F4F0) : null, child: body),
+          SimilarFactories(factoryId: _id),
           const SizedBox(height: 24),
         ],
       ),
@@ -721,7 +728,10 @@ class _FactoryProfileScreenState extends State<FactoryProfileScreen> {
                   style: const TextStyle(fontSize: 18)),
             ]),
             const SizedBox(height: 4),
-            Text(_name,
+            NameWithBadge(
+                name: _name,
+                level: f['verification_badge'],
+                badgeSize: 20,
                 style: GoogleFonts.tajawal(
                     fontSize: 21,
                     fontWeight: FontWeight.w800,

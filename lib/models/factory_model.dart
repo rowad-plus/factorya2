@@ -28,6 +28,8 @@ class FactoryModel {
   final String nickname;
   final String logoUrl;
   final String subscriptionType;
+  /// none | standard | premium | gold (package verification badge).
+  final String verificationBadge;
   final String country;
   final int viewsCount;
   final int productsCount;
@@ -62,6 +64,7 @@ class FactoryModel {
     this.nickname = '',
     this.logoUrl = '',
     this.subscriptionType = '',
+    this.verificationBadge = '',
     this.country = '',
     this.viewsCount = 0,
     this.productsCount = 0,
@@ -76,7 +79,7 @@ class FactoryModel {
         description: description, phone: phone, whatsapp: whatsapp, email: email,
         website: website, tags: tags, branches: b,
         facebook: facebook, instagram: instagram, twitter: twitter, youtube: youtube,
-        nickname: nickname, logoUrl: logoUrl, subscriptionType: subscriptionType,
+        nickname: nickname, logoUrl: logoUrl, subscriptionType: subscriptionType, verificationBadge: verificationBadge,
         country: country, viewsCount: viewsCount, productsCount: productsCount,
       );
 }

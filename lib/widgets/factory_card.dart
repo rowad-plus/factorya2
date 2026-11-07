@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/factory_model.dart';
 import '../theme/app_theme.dart';
 import 'common_widgets.dart';
+import 'verification_badge.dart';
 
 class FactoryCardSm extends StatelessWidget {
   final FactoryModel factory;
@@ -28,7 +29,7 @@ class FactoryCardSm extends StatelessWidget {
               imageUrl: factory.logoUrl,
             ),
             const SizedBox(height: 6),
-            Text(factory.name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
+            NameWithBadge(name: factory.name, level: factory.verificationBadge, textAlign: TextAlign.center, maxLines: 2, badgeSize: 12,
               style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.text, height: 1.3)),
           ],
         ),
@@ -68,7 +69,7 @@ class FactoryCardGrid extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(factory.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  NameWithBadge(name: factory.name, level: factory.verificationBadge, maxLines: 1, badgeSize: 13,
                     style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.text)),
                   Text(factory.category, style: GoogleFonts.tajawal(fontSize: 9.5, fontWeight: FontWeight.w600, color: AppColors.gold)),
                   StarRating(rating: factory.rating, size: 9.5),
@@ -116,7 +117,7 @@ class FactoryCardList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(factory.name, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.text)),
+                    NameWithBadge(name: factory.name, level: factory.verificationBadge, badgeSize: 14, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.text)),
                     Text(factory.category, style: GoogleFonts.tajawal(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.gold)),
                     const SizedBox(height: 3),
                     Row(

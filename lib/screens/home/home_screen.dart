@@ -16,6 +16,7 @@ import '../auth/login_modal.dart';
 import '../gate/gate_screen.dart';
 import '../factory_profile/factory_profile_screen.dart';
 import '../timeline/create_post_screen.dart';
+import '../../widgets/verification_badge.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onGoCompanies;
@@ -505,13 +506,8 @@ class _RecentFactoryCard extends StatelessWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.tajawal(fontSize: 14.5, fontWeight: FontWeight.w700, color: AppColors.text)),
-                          if (featured)
-                            Container(
-                              width: 18,
-                              height: 18,
-                              decoration: const BoxDecoration(color: Color(0xFFFDF4E0), shape: BoxShape.circle),
-                              child: const Icon(Icons.workspace_premium, size: 12, color: Color(0xFFD4A017)),
-                            ),
+                          if (VerificationBadge.shows(f['verification_badge']))
+                            VerificationBadge(level: f['verification_badge'], size: 16),
                           if (f['is_new'] == true)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),

@@ -71,8 +71,9 @@ final _router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => MainShell(child: child),
       routes: [
-        GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-        GoRoute(path: '/categories', builder: (_, __) => const CategoriesScreen()),
+        // Bottom-bar tabs switch instantly (no slide), so two pages never overlap mid-transition.
+        GoRoute(path: '/', pageBuilder: (_, s) => NoTransitionPage(key: s.pageKey, child: const HomeScreen())),
+        GoRoute(path: '/categories', pageBuilder: (_, s) => NoTransitionPage(key: s.pageKey, child: const CategoriesScreen())),
         GoRoute(path: '/products', builder: (_, __) => const ProductsScreen()),
     GoRoute(
       path: '/gate/:id',
@@ -127,7 +128,7 @@ final _router = GoRouter(
         return OpportunityDetailScreen(opp: found.first);
       },
     ),
-    GoRoute(path: '/chat', builder: (_, __) => const ChatListScreen()),
+    GoRoute(path: '/chat', pageBuilder: (_, s) => NoTransitionPage(key: s.pageKey, child: const ChatListScreen())),
     GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
     GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
     GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),

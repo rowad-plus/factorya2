@@ -9,6 +9,7 @@ import '../../widgets/shell_widgets.dart';
 import '../auth/login_modal.dart';
 import 'dash_kit.dart';
 import 'dash_sections.dart';
+import 'dash_analytics.dart';
 import '../../services/phone_text.dart';
 
 /// Native factory dashboard (`/api/v1/factory-dashboard`): home with statistics, then every
@@ -148,6 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                 ],
               ),
+              const DashAnalytics(),
               Padding(padding: const EdgeInsets.fromLTRB(16, 18, 16, 4), child: Text(td('dashboard.quick_actions'), style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w800))),
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

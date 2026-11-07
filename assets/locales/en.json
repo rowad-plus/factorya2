@@ -1,4 +1,9 @@
 {
+  "badge": {
+    "verified": "Verified",
+    "verified_premium": "Verified Premium",
+    "verified_gold": "Verified Gold"
+  },
   "exhibitionsSubtitle": "{count} exhibitions in Arab countries",
   "verify_otp_page": {
     "title": "Enter Verification Code",
@@ -360,6 +365,8 @@
     "team": "Team Members"
   },
   "factory_profile": {
+    "similar_factories": "Similar factories",
+    "sponsored": "Sponsored",
     "share_factory": "Share Factory",
     "link_copied": "Link copied successfully!",
     "no_branches": "No branches currently available",
@@ -629,6 +636,15 @@
     "btn_start_free": "Start for Free",
     "btn_subscribe": "Subscribe Now",
     "currency_egp": "EGP",
+    "currency_sar": "SAR",
+    "currency_try": "TRY",
+    "currency_aed": "AED",
+    "currency_qar": "QAR",
+    "currency_kwd": "KWD",
+    "currency_omr": "OMR",
+    "currency_dzd": "DZD",
+    "currency_syp": "SYP",
+    "currency_usd": "USD",
     "login_first": "Please login first",
     "factory_account_required": "You must have a factory account to subscribe to packages"
   },
@@ -757,6 +773,7 @@
     "total": "Total "
   },
   "chat": {
+    "priority": "Priority",
     "title": "Messages",
     "search_placeholder": "Search conversations...",
     "type_message_placeholder": "Type a message (max 5000 characters)...",

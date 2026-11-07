@@ -1,4 +1,9 @@
 {
+  "badge": {
+    "verified": "Doğrulanmış",
+    "verified_premium": "Doğrulanmış Premium",
+    "verified_gold": "Doğrulanmış Altın"
+  },
   "exhibitionsSubtitle": "Arap ülkelerinde {count} fuar",
   "verify_otp_page": {
     "title": "Doğrulama Kodunu Girin",
@@ -443,6 +448,15 @@
     "btn_start_free": "Ücretsiz Başla",
     "btn_subscribe": "Şimdi Abone Ol",
     "currency_egp": "EGP",
+    "currency_sar": "SAR",
+    "currency_try": "TL",
+    "currency_aed": "AED",
+    "currency_qar": "QAR",
+    "currency_kwd": "KWD",
+    "currency_omr": "OMR",
+    "currency_dzd": "DZD",
+    "currency_syp": "SYP",
+    "currency_usd": "USD",
     "login_first": "Lütfen önce giriş yapın",
     "factory_account_required": "Paketlere abone olmak için bir fabrika hesabınız olmalıdır"
   },
@@ -591,6 +605,8 @@
     "national_industry": "Ulusal"
   },
   "factory_profile": {
+    "similar_factories": "Benzer fabrikalar",
+    "sponsored": "Sponsorlu",
     "share_factory": "Fabrika Paylaş",
     "link_copied": "Link kopyalandı!",
     "no_branches": "Şu anda şube yok",
@@ -767,6 +783,7 @@
     "total": "Tüm "
   },
   "chat": {
+    "priority": "Öncelikli",
     "title": "Mesajlar",
     "search_placeholder": "Sohbetlerde ara...",
     "type_message_placeholder": "Bir mesaj yazın (en fazla 5000 karakter)...",

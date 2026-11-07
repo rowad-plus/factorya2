@@ -512,7 +512,7 @@ class PricesScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(AppData.tr(p, 'description'), style: GoogleFonts.tajawal(fontSize: 13, color: AppColors.muted, height: 1.6)),
                     const SizedBox(height: 10),
-                    Text(p['is_free'] == true ? t('prices.free', 'مجاني') : '${(p['prices'] is List && (p['prices'] as List).isNotEmpty) ? ((p['prices'] as List).first as Map)['price'] ?? '' : ''} ${t('prices.yearly', 'سنوياً')}', style: GoogleFonts.tajawal(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.gold)),
+                    Text(p['is_free'] == true ? t('prices.free', 'مجاني') : _priceLabel(p), style: GoogleFonts.tajawal(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.gold)),
                     const SizedBox(height: 8),
                     Text(t('prices.features_title', 'يشمل'), style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800)),
                     for (final f in list(p, 'features'))
@@ -553,4 +553,17 @@ class PricesScreen extends StatelessWidget {
   }
 
   Widget _tag(String s) => Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: AppColors.gold3, borderRadius: BorderRadius.circular(20)), child: Text(s, style: GoogleFonts.tajawal(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.gold)));
+}
+
+/// Yearly price of a package for the visitor's country (falls back to Saudi Arabia).
+String _priceLabel(Map<String, dynamic> p) {
+  final list = p['prices'] is List ? (p['prices'] as List).whereType<Map>().toList() : <Map>[];
+  if (list.isEmpty) return '';
+  Map? pick(int id) => list.cast<Map?>().firstWhere((e) => (e?['country_id'] as num?)?.toInt() == id, orElse: () => null);
+  final pr = pick(AppData.countryId) ?? pick(183) ?? list.first;
+  final n = num.tryParse('${pr['price']}')?.round() ?? 0;
+  final s = n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+  final code = '${pr['currency'] ?? ''}'.toLowerCase();
+  final cur = code.isEmpty ? '' : t('prices.currency_$code', code.toUpperCase());
+  return '$s $cur / ${t('prices.yearly', 'سنوياً')}';
 }

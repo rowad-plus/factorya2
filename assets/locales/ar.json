@@ -1,4 +1,9 @@
 {
+  "badge": {
+    "verified": "موثّق",
+    "verified_premium": "موثّق مميز",
+    "verified_gold": "موثّق ذهبي"
+  },
   "exhibitionsSubtitle": "{count} معرض في الدول العربية",
   "verify_otp_page": {
     "title": "أدخل رمز التحقق",
@@ -360,6 +365,8 @@
     "team": "فريق العمل"
   },
   "factory_profile": {
+    "similar_factories": "مصانع مشابهة",
+    "sponsored": "إعلان",
     "share_factory": "مشاركة المصنع",
     "link_copied": "تم نسخ الرابط!",
     "no_branches": "لا توجد فروع متاحة حالياً",
@@ -629,6 +636,15 @@
     "btn_start_free": "ابدأ مجاناً",
     "btn_subscribe": "اشترك الآن",
     "currency_egp": "ج.م",
+    "currency_sar": "ر.س",
+    "currency_try": "ل.ت",
+    "currency_aed": "د.إ",
+    "currency_qar": "ر.ق",
+    "currency_kwd": "د.ك",
+    "currency_omr": "ر.ع",
+    "currency_dzd": "د.ج",
+    "currency_syp": "ل.س",
+    "currency_usd": "$",
     "login_first": "يرجى تسجيل الدخول أولاً",
     "factory_account_required": "يجب أن تمتلك حساب مصنع للاشتراك في الباقات"
   },
@@ -757,6 +773,7 @@
     "total": "إجمالي "
   },
   "chat": {
+    "priority": "أولوية",
     "title": "الرسائل",
     "search_placeholder": "البحث في المحادثات...",
     "type_message_placeholder": "اكتب رسالتك (الحد الأقصى 5000 حرف)...",
