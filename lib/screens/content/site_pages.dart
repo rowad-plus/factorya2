@@ -485,7 +485,13 @@ class PricesScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([L10n.i, AppData.revision]),
       builder: (context, _) {
-        final plans = AppData.packages;
+        // Paid packages first (their sort order), the free package last — same as the site.
+        final plans = [...AppData.packages]..sort((a, b) {
+            final fa = a['is_free'] == true ? 1 : 0, fb = b['is_free'] == true ? 1 : 0;
+            if (fa != fb) return fa - fb;
+            return ((a['sort_order'] as num?) ?? 0).compareTo((b['sort_order'] as num?) ?? 0);
+          });
+        bool popular(Map<String, dynamic> p) => p['is_free'] != true && p['is_admin_only'] != true && p['geo_scope'] == 'global';
         List<String> list(Map<String, dynamic> p, String key) {
           final v = p['${key}_${L10n.i.lang}'] ?? p['${key}_ar'];
           return v is List ? v.map((e) => '$e').toList() : <String>[];
@@ -503,10 +509,17 @@ class PricesScreen extends StatelessWidget {
                 Container(
                   margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
                   padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: p['tier'] == 'sponsors_banners' ? AppColors.gold : AppColors.border, width: p['tier'] == 'sponsors_banners' ? 2 : 1)),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: popular(p) ? AppColors.gold : AppColors.border, width: popular(p) ? 2 : 1)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
                       Expanded(child: Text(AppData.tr(p, 'name'), style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w800))),
+                      if (popular(p))
+                        Container(
+                          margin: const EdgeInsetsDirectional.only(end: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(20)),
+                          child: Text(t('prices.popular', 'الأكثر شيوعاً'), style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.dark)),
+                        ),
                       if (p['is_admin_only'] == true) _tag(t('prices.admin_only', 'للإدارة فقط')) else _tag(p['geo_scope'] == 'global' ? t('prices.global', 'عالمي') : t('prices.local', 'محلي')),
                     ]),
                     const SizedBox(height: 6),
